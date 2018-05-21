@@ -166,7 +166,7 @@ vertx.timerStream(300)
 ```
 
 ### Implement Kubernetes Config
-Following one of the tenets of [12 Factory Applications](https://12factor.net/config), we will want to store our
+Following one of the tenets of [12 Factor Applications](https://12factor.net/config), we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
 by providing a comprehensive set of APIs for loading the application's configuration. In our case, since we are
 deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration. Here's how I would do it.

@@ -33,10 +33,10 @@ Some of the tools we will leverage in this workshop are listed below:
 
 1. Load up a complete DevOps environment in Kubernetes using Ansible automation
 1. Load our existing application code into this DevOps environment and wire it up to our GitHub repos
-1. Create a Vert.x microservice project to work with these existing services and communicate with each other [|&#128279;|
-](#create-a-new-vert.x-project)
-   1. Implement clients for the noun and adjective services using OpenAPI specifications [|&#128279;|](#implement-rest-clients)
-   1. Implement a REST API using OpenAPI 3 specifications and service proxies [|&#128279;|](#implement-rest-api)
+1. Create a Vert.x microservice project to work with these existing services and communicate with each other [&#128279;
+](#create-a-new-vertx-project)
+   1. Implement clients for the noun and adjective services using OpenAPI specifications [&#128279;](#implement-rest-clients)
+   1. Implement a REST API using OpenAPI 3 specifications and service proxies [&#128279;](#implement-rest-api)
    1. Implement a new [service proxy](https://vertx.io/docs/vertx-service-proxy/java/)
    1. Implement a reactive Kafka system to stream "liked" insults
    1. Generate JavaScript code to integrate our application into the UI

@@ -1,13 +1,13 @@
-# Reactive Microservices on Kubernetes
+= Reactive Microservices on Kubernetes
 Deven Phillips <deven.phillips@redhat.com>
 v1.0, 2018-05-22
 :conum-guard-java: //
 ifndef::icons[:conum-guard-java: // //]
 :conum-guard-groovy: //
 ifndef::icons[:conum-guard-groovy: // //]
-## Using Red Hat OpenShift Application Runtimes
+== Using Red Hat OpenShift Application Runtimes
 
-## Overview
+== Overview
 Microservices and Containers have changed the entire landscape of software
 development in the last few years. We are now able to decompose our development
 work into smaller and more digestible components which are easier to understand
@@ -36,7 +36,7 @@ Some of the tools we will leverage in this workshop are listed below:
 * https://projects.spring.io/spring-boot/[Spring Boot] An alternative to writing applications using JavaEE
 * https://hoverfly.readthedocs.io/en/latest/[HoverFly] A service virtualization tool which simplifies testing Microservices
 
-## What we are going to do during today's workshop
+== What we are going to do during today's workshop
 
 . <<#section-1,▼>> Load up a complete DevOps environment in Kubernetes using Ansible automation
 . <<#section-2,▼>> Load our existing application code into this DevOps environment and wire it up to our GitHub repos
@@ -56,7 +56,7 @@ Some of the tools we will leverage in this workshop are listed below:
 . <<#section-6-b,▼>>Analyze our web application for security vulnerabilities using OWASP Zed Attack Proxy
 . <<#section-7-b,▼>>Analyze our the library dependencies of our services to check for vulnerable libraries
 
-### [[section-3]] Create a new Vert.x project
+=== [[section-3]] Create a new Vert.x project
 . Ensure that you have Apache Maven >= 3.3.9
 . From the `insult-service` directory, run the following command
 
@@ -138,7 +138,7 @@ from the initialization process, so we can put them in without versions as follo
 </dependency>
 ----
 
-### [[section-3-a]] Set Up For Testing
+=== [[section-3-a]] Set Up For Testing
 
 Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. Personally,
 I prefer BDD style tests, so for this workshop I will be demonstrating 
@@ -243,7 +243,7 @@ run the Spock tests:
 </build>
 ----
 
-### [[section-3-b]] Basic Vert.x Concepts
+=== [[section-3-b]] Basic Vert.x Concepts
 
 The https://vertx.io/docs/vertx-core/java/[Vert.x Core Documentation] is a really great reference to some of the basic
 concepts in Vert.x. We'll cover a few of these things here, but please feel free to go to the official docs for more
@@ -272,7 +272,7 @@ To support this, Vert.x provides non-blocking implementations of many common fun
 * Authentication/Authorization/Audit (AAA)
 * Metrics
 
-#### Verticles
+==== Verticles
 From the new project we generated via Maven, we can see that a class called `MainVerticle` was created. 
 https://vertx.io/docs/vertx-core/java/#_verticles[Verticles] are the basic unit of an application in Vert.x. By default,
 Verticles are run single-threaded on an event loop (Reactor Pattern). The one difference between this and other Reactor 
@@ -297,7 +297,7 @@ public class MainVerticle extends AbstractVerticle {
 }
 ----
 
-#### Non-Blocking
+==== Non-Blocking
 Because Vert.x uses event loops for Verticles, we must always ensure that we do not call blocking code and thus block
 the event loop. Since Vert.x does not have non-blocking APIs for every situation, it provides a means for use to 
 implement traditional blocking Java code using the `vertx.executeBlocking` method. For example, if we wanted to make a
@@ -314,7 +314,7 @@ vertx.executeBlocking(future -> {
 });
 ----
 
-#### [[section-3-b-eventbus]] Event Bus
+==== [[section-3-b-eventbus]] Event Bus
 The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to 
 run single-threaded and potentially across multiple threads/cores in parallel, we need a safe way to share data which
 will not cause race conditions or concurrency problems. To facilitate this, Vert.x has an Event Bus through which we
@@ -338,7 +338,7 @@ vertx.timerStream(300)
             .subscribe(m -> System.out.println(m.body())));
 ----
 
-### [[section-3-c]] Implement Kubernetes Config
+=== [[section-3-c]] Implement Kubernetes Config
 Following one of the tenets of https://12factor.net/config[12 Factor Applications], we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
 by providing a comprehensive set of APIs for loading the application's configuration. In our case, since we are
@@ -495,14 +495,14 @@ default config sets `noun.host = 'localhost'`, but the Kubernetes ConfigMap sets
 the ConfigMap value will take precedence.
 ====
 
-### Implement a new https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
+=== Implement a new https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first 
 <<#section-3-b-eventbus,example>> of sending and receiving on the event bus, we used a producer and a consumer based on
 rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer
 experience. Instead, we can use Vert.x Service Proxies to provide an easier way to implement business logic
 and then expose that business logic on the event bus in a more consumable manner.
 
-#### The Interface
+==== The Interface
 All service proxies start with an Interface definition which looks something like this:
 
 [source,java,subs=attributes+]
@@ -593,7 +593,7 @@ import io.vertx.codegen.annotations.ModuleGen;
 We have left the service implementation class as a stub so that we can delve deeper into HTTP clients
 in the next section.
 
-### Implement REST clients
+=== Implement REST clients
 Vert.x recently introduced significant support for the https://www.openapis.org/[OpenAPI v3 Specification] language. 
 OpenAPI 3 allows us to describe a REST API using YAML or JSON. From those specifications, we can create both server
 and client implementations for the REST API. We will use this facility in Vert.x to create REST API clients for the
@@ -601,5 +601,5 @@ Noun and Adjective services which were previously implemented using NodeJS and S
 
 1. Create a new class 
 
-### Implement REST API
-#### TODO: Using OpenAPI 3 Spec file to create REST API in Vert.x
+=== Implement REST API
+==== TODO: Using OpenAPI 3 Spec file to create REST API in Vert.x

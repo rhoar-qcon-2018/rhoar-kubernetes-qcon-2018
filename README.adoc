@@ -25,34 +25,38 @@ Some of the tools we will leverage in this workshop are listed below:
 * [OWASP Dependency Check](https://www.owasp.org/index.php/OWASP_Dependency_Check)
 * [Vert.x](http://vertx.io/) - A toolkit for developing reactive applications on the JVM
 * [Java](http://openjdk.org/) - A modern and high-performance programming language
+* [Spock Framework](http://spockframework.org/spock/docs/1.1/index.html) A testing and specification framework for Java and Groovy applications
 * [Node.js](https://nodejs.org/) - A programming language well suited to quickly develop applications
 * [Spring Boot](https://projects.spring.io/spring-boot/) An alternative to writing applications using JavaEE
 * [HoverFly](https://hoverfly.readthedocs.io/en/latest/) A service virtualization tool which simplifies testing Microservices
 
 ## What we are going to do during today's workshop
 
-1. Load up a complete DevOps environment in Kubernetes using Ansible automation
-1. Load our existing application code into this DevOps environment and wire it up to our GitHub repos
-1. [▼](#create-a-new-vertx-project) Create a Vert.x microservice project to work with these existing services and communicate with each other
-   1. [▼](#set-up-for-esting) Set Up For Testing
-   1. [▼](#basic-vertx-concepts) Familiarize ourselves with some basic Vert.x concepts
-   1. [▼](#implement-kubernetes-config) Implement Vert.x Kubernetes Config
-   1. [▼](#implement-rest-clients) Implement clients for the noun and adjective services using OpenAPI specifications
-   1. [▼](#implement-rest-api) Implement a REST API using OpenAPI 3 specifications and service proxies
-   1. Implement a new [service proxy](https://vertx.io/docs/vertx-service-proxy/java/)
-   1. Implement a reactive Kafka system to stream "liked" insults
-   1. Generate JavaScript code to integrate our application into the UI
-   1. Implement circuit breakers to prevent poor user experience
-   1. Implement some BDD tests for our service
-1. Run our application code through the DevOps pipeline and resolve issues QUICKLY!
-1. Perform code quality analysis and unit/integration testing using SonarQube and HoverFly
-1. Analyze our web application for security vulnerabilities using OWASP Zed Attack Proxy
-1. Analyze our the library dependencies of our services to check for vulnerable libraries
+. Load up a complete DevOps environment in Kubernetes using Ansible automation
+. Load our existing application code into this DevOps environment and wire it up to our GitHub repos
+. <<#section-3,▼>> Create a Vert.x microservice project to work with these existing services and communicate with each other
+.. <<#section-3-a,▼>> Set Up For Testing
+.. <<#section-3-b,▼>> Familiarize ourselves with some basic Vert.x concepts
+.. <<#section-3-c,▼>> Implement Vert.x Kubernetes Config
+.. <<#section-3-d,▼>> Implement clients for the noun and adjective services using OpenAPI specifications
+.. <<#section-3-e,▼>> Implement a REST API using OpenAPI 3 specifications and service proxies
+.. <<#section-3-f,▼>>Implement a new [service proxy](https://vertx.io/docs/vertx-service-proxy/java/)
+.. <<#section-3-g,▼>>Implement a reactive Kafka system to stream "liked" insults
+.. <<#section-3-h,▼>>Generate JavaScript code to integrate our application into the UI
+.. <<#section-3-i,▼>>Implement circuit breakers to prevent poor user experience
+.. <<#section-3-j,▼>>Implement some BDD tests for our service
+. <<#section-4-b,▼>>Run our application code through the DevOps pipeline and resolve issues QUICKLY!
+. <<#section-5-b,▼>>Perform code quality analysis and unit/integration testing using SonarQube and HoverFly
+. <<#section-6-b,▼>>Analyze our web application for security vulnerabilities using OWASP Zed Attack Proxy
+. <<#section-7-b,▼>>Analyze our the library dependencies of our services to check for vulnerable libraries
 
-### Create a new Vert.x project
-1. Ensure that you have Apache Maven >= 3.3.9
-1. From the `insult-service` directory, run the following command
-```bash
+### [[section-3]] Create a new Vert.x project
+. Ensure that you have Apache Maven >= 3.3.9
+. From the `insult-service` directory, run the following command
+
+.Executing Fabric8 Vert.x Plugin To Start A New Project
+[source,bash]
+----
 $ mvn io.fabric8:vertx-maven-plugin:1.0.13:setup -DvertxVersion=3.5.1
 [INFO] Scanning for projects...
 [INFO] 
@@ -75,7 +79,7 @@ Set the vertcile class name [com.redhat.qcon.MainVerticle]:
 [INFO] Finished at: 2018-05-21T12:07:46-04:00
 [INFO] Final Memory: 9M/166M
 [INFO] ------------------------------------------------------------------------
-```
+----
 
 This will create a new Maven POM file populated based on the values you entered during the setup.
 
@@ -92,7 +96,8 @@ After the POM file has been created, we will need to add some additional librari
 All of these are within the `io.vertx` Maven group ID and covered via the depenency management setup 
 from the initialization process, so we can put them in without versions as follows:
 
-```xml
+[source,xml]
+----
 <dependency>
     <groupId>io.vertx</groupId>
     <artifactId>vertx-web-api-contract</artifactId>
@@ -124,7 +129,7 @@ from the initialization process, so we can put them in without versions as follo
     <artifactId>vertx-lang-js</artifactId>
     <scope>provided</scope>
 </dependency>
-```
+----
 
 ### Set Up For Testing
 
@@ -133,7 +138,8 @@ I prefer BDD style tests, so for this workshop I will be demonstrating
 [SpockFramework](http://spockframework.org/spock/docs/1.1/index.html). To use Spock, we will need to
 add some additional dependencies to our POM:
 
-```xml
+[source,xml]
+----
 <dependency>
     <groupId>org.codehaus.groovy</groupId>
     <artifactId>groovy-all</artifactId>
@@ -159,12 +165,13 @@ add some additional dependencies to our POM:
     <artifactId>objenesis</artifactId>
     <scope>test</scope>
 </dependency>
-```
+----
 
 We will also need to add the GMavenPlus plugin and configure the Maven SureFire plugin to be able to
 run the Spock tests:
 
-```xml
+[source,xml]
+----
 <build>
         <plugins>
         ... SNIP ...
@@ -220,7 +227,7 @@ run the Spock tests:
         ... SNIP ...
         </plugins>
     </build>
-```
+----
 
 ### Basic Vert.x Concepts
 
@@ -231,13 +238,14 @@ in-depth information.
 Vert.x implements a *fluent* SPI. This means that for most Vert.x components, you can chain calls together in a nicely
 readable manner.
 
-```java
+[source,java]
+----
 vertx.eventBus()
      .consumer("some-address")
      .toObservable()
      .doOnError(this::errorHandler)
      .subscribe(this::messageHandler);
-```
+----
 
 Another core concept of Vert.x is that everything which is done in a Verticle should be done in a non-blocking way. 
 To support this, Vert.x provides non-blocking implementations of many common functionalities such as:
@@ -258,7 +266,8 @@ Pattern implementations you may have seen before is that Vert.x runs MULTIPLE ev
 
 The basic contents of a Vertical are a class definition and a `start` method, as shown here:
 
-```java
+[source,java]
+----
 package com.redhat.qcon;
 
 import io.vertx.core.AbstractVerticle;
@@ -271,7 +280,7 @@ public class MainVerticle extends AbstractVerticle {
         startFuture.complete(); // Called once the Vertical is ready
     }
 }
-```
+----
 
 #### Non-Blocking
 Because Vert.x uses event loops for Verticles, we must always ensure that we do not call blocking code and thus block
@@ -280,14 +289,15 @@ implement traditional blocking Java code using the `vertx.executeBlocking` metho
 call via [JNDI](http://www.oracle.com/technetwork/java/jndi/index.html) to look up something in an LDAP directory, we
 might do something like:
 
-```java
+[source,java]
+----
 vertx.executeBlocking(future -> {
     // Make our JNDI calls here!
     future.complete(result);
 }, result -> {
     // Handle the results of the blocking operation once it completes.
 });
-```
+----
 
 #### Event Bus
 The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to 
@@ -295,7 +305,8 @@ run single-threaded and potentially across multiple threads/cores in parallel, w
 will not cause race conditions or concurrency problems. To facilitate this, Vert.x has an Event Bus through which we
 can send/receive messages between Verticles. A simple example of using the event bus might look like:
 
-```java
+[source,java]
+----
 // Create a consumer and reply when we get PING messages
 vertx.eventBus()
     .consumer("ping-timer")
@@ -310,15 +321,24 @@ vertx.timerStream(300)
     .subscribe(ping -> vertx.eventBus()
             .rxSend("ping-timer", ping)
             .subscribe(m -> System.out.println(m.body())));
-```
+----
 
 ### Implement Kubernetes Config
 Following one of the tenets of [12 Factor Applications](https://12factor.net/config), we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
 by providing a comprehensive set of APIs for loading the application's configuration. In our case, since we are
-deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration. Here's how I would do it.
+deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration. 
 
-```java
+Another best practice is that we should practice "test first" development. To further that concept, let's start
+by writing a failing test for the feature we intent to implement.
+
+
+
+Here's how I would do it.
+
+.Implementing Kubernetes ConfigMap Support
+[source,java]
+----
 package com.redhat.qcon;
 
 import io.reactivex.Maybe;
@@ -378,7 +398,7 @@ public class MainVerticle extends AbstractVerticle {
         return ConfigRetriever.create(vertx, retrieverOptions).rxGetConfig().toMaybe();
     }
 }
-```
+----
 
 This example replaces the generic Verticle type with one which has been refactored to use
 Reactive Extensions. Most of the rest of this Workshop with rely on using ReactiveX for 
@@ -394,7 +414,8 @@ and then expose that business logic on the event bus in a more consumable manner
 #### The Interface
 All service proxies start with an Interface definition which looks something like this:
 
-```java
+[source,java]
+----
 package com.redhat.qcon.services.noun;
 
 import io.vertx.codegen.annotations.ProxyGen;
@@ -425,7 +446,7 @@ public interface NounService {
     @Fluent
     NounService healthCheck(Handler<AsyncResult<Boolean>> nounHealthCheckHandler);
 }
-```
+----
 
 All of the business logic methods return "void" or the can be fluent and return their service instance.
 The two static methods at the beginning are boilerplate for Service Proxies. These methods are used
@@ -433,7 +454,8 @@ by the underlying runtime to provide a simple means of wiring up the service pro
 
 Now that we have an interface, we need to create an implementation:
 
-```java
+[source,java]
+----
 package com.redhat.qcon.services.noun;
 
 import io.vertx.core.AsyncResult;
@@ -464,17 +486,18 @@ public class NounServiceImpl implements NounService {
         return this;
     }
 }
-```
+----
 
 And finally, we must create a `package-info.java` file annotated with `@ModuleGen` in order for the
 Vert.x annotation processor to work.
 
-```java
+[source,java]
+----
 @ModuleGen(name = "insult", groupPackage = "com.redhat.qcon.services")
 package com.redhat.qcon;
 
 import io.vertx.codegen.annotations.ModuleGen;
-```
+----
 
 We have left the service implementation class as a stub so that we can delve deeper into HTTP clients
 in the next section.

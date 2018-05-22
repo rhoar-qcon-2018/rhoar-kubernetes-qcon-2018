@@ -34,6 +34,7 @@ Some of the tools we will leverage in this workshop are listed below:
 1. Load up a complete DevOps environment in Kubernetes using Ansible automation
 1. Load our existing application code into this DevOps environment and wire it up to our GitHub repos
 1. [▼](#create-a-new-vertx-project) Create a Vert.x microservice project to work with these existing services and communicate with each other
+   1. [▼](#set-up-for-esting) Set Up For Testing
    1. [▼](#basic-vertx-concepts) Familiarize ourselves with some basic Vert.x concepts
    1. [▼](#implement-kubernetes-config) Implement Vert.x Kubernetes Config
    1. [▼](#implement-rest-clients) Implement clients for the noun and adjective services using OpenAPI specifications
@@ -78,6 +79,149 @@ Set the vertcile class name [com.redhat.qcon.MainVerticle]:
 
 This will create a new Maven POM file populated based on the values you entered during the setup.
 
+After the POM file has been created, we will need to add some additional libraries for this microservice:
+
+1. vertx-web-api-contract
+1. vertx-rx-java2
+1. vertx-service-proxy
+1. vertx-sockjs-service-proxy
+1. vertx-config-kubernetes-configmap
+1. vertx-codegen
+1. vertx-lang-js
+
+All of these are within the `io.vertx` Maven group ID and covered via the depenency management setup 
+from the initialization process, so we can put them in without versions as follows:
+
+```xml
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-web-api-contract</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-rx-java2</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-service-proxy</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-sockjs-service-proxy</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-config-kubernetes-configmap</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-codegen</artifactId>
+    <scope>provided</scope>
+    <classifier>processor</classifier>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-lang-js</artifactId>
+    <scope>provided</scope>
+</dependency>
+```
+
+### Set Up For Testing
+
+Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. Personally,
+I prefer BDD style tests, so for this workshop I will be demonstrating 
+[SpockFramework](http://spockframework.org/spock/docs/1.1/index.html). To use Spock, we will need to
+add some additional dependencies to our POM:
+
+```xml
+<dependency>
+    <groupId>org.codehaus.groovy</groupId>
+    <artifactId>groovy-all</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.javassist</groupId>
+    <artifactId>javassist</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.spockframework</groupId>
+    <artifactId>spock-core</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>net.bytebuddy</groupId>
+    <artifactId>byte-buddy</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency> <!-- enables mocking of classes without default constructor (together with CGLIB) -->
+    <groupId>org.objenesis</groupId>
+    <artifactId>objenesis</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+We will also need to add the GMavenPlus plugin and configure the Maven SureFire plugin to be able to
+run the Spock tests:
+
+```xml
+<build>
+        <plugins>
+        ... SNIP ...
+            <plugin>    <!-- Add support for compiling Groovy files -->
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>addSources</goal>
+                            <goal>addTestSources</goal>
+                            <goal>generateStubs</goal>
+                            <goal>compile</goal>
+                            <goal>testGenerateStubs</goal>
+                            <goal>testCompile</goal>
+                            <goal>removeStubs</goal>
+                            <goal>removeTestStubs</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>    <!-- Configure the Maven SureFire plugin to use Groovy Spec files for test -->
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <useFile>false</useFile>
+                    <includes>
+                        <include>**/*Spec.groovy</include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>    <!-- Configure JaCoCo to be able to extract code coverage information -->
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.7.6.201602180812</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-initialize</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-site</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        ... SNIP ...
+        </plugins>
+    </build>
+```
+
 ### Basic Vert.x Concepts
 
 The [Vert.x Core Documentation](https://vertx.io/docs/vertx-core/java/) is a really great reference to some of the basic
@@ -105,6 +249,7 @@ To support this, Vert.x provides non-blocking implementations of many common fun
 * Authentication/Authorization/Audit (AAA)
 * Metrics
 
+#### Verticles
 From the new project we generated via Maven, we can see that a class called `MainVerticle` was created. 
 [Verticles](https://vertx.io/docs/vertx-core/java/#_verticles) are the basic unit of an application in Vert.x. By default,
 Verticles are run single-threaded on an event loop (Reactor Pattern). The one difference between this and other Reactor 
@@ -128,6 +273,7 @@ public class MainVerticle extends AbstractVerticle {
 }
 ```
 
+#### Non-Blocking
 Because Vert.x uses event loops for Verticles, we must always ensure that we do not call blocking code and thus block
 the event loop. Since Vert.x does not have non-blocking APIs for every situation, it provides a means for use to 
 implement traditional blocking Java code using the `vertx.executeBlocking` method. For example, if we wanted to make a
@@ -143,6 +289,7 @@ vertx.executeBlocking(future -> {
 });
 ```
 
+#### Event Bus
 The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to 
 run single-threaded and potentially across multiple threads/cores in parallel, we need a safe way to share data which
 will not cause race conditions or concurrency problems. To facilitate this, Vert.x has an Event Bus through which we
@@ -238,7 +385,99 @@ Reactive Extensions. Most of the rest of this Workshop with rely on using Reacti
 our Vert.x code.
 
 ### Implement a new [Service Proxy](https://vertx.io/docs/vertx-service-proxy/java/)
-Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus.
+Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first 
+[example](#event-bus) of sending and receiving on the event bus, we used a producer and a consumer based on 
+rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer
+experience. Instead, we can use Vert.x Service Proxies to provide an easier way to implement business logic
+and then expose that business logic on the event bus in a more consumable manner.
+
+#### The Interface
+All service proxies start with an Interface definition which looks something like this:
+
+```java
+package com.redhat.qcon.services.noun;
+
+import io.vertx.codegen.annotations.ProxyGen;
+import io.vertx.codegen.annotations.VertxGen;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+
+@ProxyGen
+@VertxGen
+public interface NounService {
+
+    static NounService create(Vertx vertx) {
+        return new NounServiceImpl(vertx);
+    }
+
+    static NounService createProxy(Vertx vertx, String address) {
+        return new NounServiceVertxEBProxy(vertx, address);
+    }
+
+    // Business logic methods here!!
+
+    void get(Handler<AsyncResult<JsonObject>> nounGetHandler);
+
+    void save(String noun, Handler<AsyncResult<JsonObject>> nounSaveHandler);
+
+    @Fluent
+    NounService healthCheck(Handler<AsyncResult<Boolean>> nounHealthCheckHandler);
+}
+```
+
+All of the business logic methods return "void" or the can be fluent and return their service instance.
+The two static methods at the beginning are boilerplate for Service Proxies. These methods are used
+by the underlying runtime to provide a simple means of wiring up the service proxy.
+
+Now that we have an interface, we need to create an implementation:
+
+```java
+package com.redhat.qcon.services.noun;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+
+public class NounServiceImpl implements NounService {
+
+    Vertx vertx;
+
+    public NounServiceImpl(Vertx vertx) {
+        this.vertx = vertx;
+    }
+
+    @Override
+    public void get(Handler<AsyncResult<JsonObject>> nounGetHandler) {
+
+    }
+
+    @Override
+    public void save(String noun, Handler<AsyncResult<JsonObject>> nounSaveHandler) {
+
+    }
+
+    @Override
+    public NounService healthCheck(Handler<AsyncResult<Boolean>> nounHealthCheckHandler) {
+        return this;
+    }
+}
+```
+
+And finally, we must create a `package-info.java` file annotated with `@ModuleGen` in order for the
+Vert.x annotation processor to work.
+
+```java
+@ModuleGen(name = "insult", groupPackage = "com.redhat.qcon.services")
+package com.redhat.qcon;
+
+import io.vertx.codegen.annotations.ModuleGen;
+```
+
+We have left the service implementation class as a stub so that we can delve deeper into HTTP clients
+in the next section.
 
 ### Implement REST clients
 Vert.x recently introduced significant support for the [OpenAPI v3 Specification](https://www.openapis.org/) language. 

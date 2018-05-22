@@ -18,7 +18,7 @@ for the operating system of the cloud, Kubernetes has become the de-facto
 standard for orchestrating containers at scale.
 
 In this workshop, you will learn how to leverage Containers and Kubernetes
-to build productive DevOps workflow using Kubernetes (Wrapped by OpenShift)
+to build a productive DevOps workflow using Kubernetes (Wrapped by OpenShift)
 to build, test, deploy, and validate microservices quickly and reliably.
 
 Some of the tools we will leverage in this workshop are listed below:

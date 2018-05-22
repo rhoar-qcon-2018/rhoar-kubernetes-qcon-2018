@@ -1,9 +1,11 @@
+# Reactive Microservices on Kubernetes
+Deven Phillips <deven.phillips@redhat.com>
+v1.0, 2018-05-22
 :conum-guard-java: //
 ifndef::icons[:conum-guard-java: // //]
 :conum-guard-groovy: //
 ifndef::icons[:conum-guard-groovy: // //]
 
-# Reactive Microservices on Kubernetes
 ## Using Red Hat OpenShift Application Runtimes
 
 ## Overview
@@ -102,7 +104,7 @@ All of these are within the `io.vertx` Maven group ID and covered via the depene
 from the initialization process, so we can put them in without versions as follows:
 
 .POM Excerpt Showing Provided and Processor Dependencies
-[source,xml]
+[source,xml,subs=attributes+]
 ----
 <dependency>
     <groupId>io.vertx</groupId>
@@ -145,7 +147,7 @@ I prefer BDD style tests, so for this workshop I will be demonstrating
 add some additional dependencies to our POM:
 
 .Adding Libraries For Spock Framework and Code Coverage
-[source,xml]
+[source,xml,subs=attributes+]
 ----
 <dependency>
     <groupId>org.codehaus.groovy</groupId>
@@ -183,7 +185,7 @@ We will also need to add the GMavenPlus plugin and configure the Maven SureFire 
 run the Spock tests:
 
 .Add Maven Plugins For Spock Framework and Code Coverage
-[source,xml]
+[source,xml,subs=attributes+]
 ----
 <build>
     <plugins>
@@ -251,7 +253,7 @@ in-depth information.
 Vert.x implements a *fluent* SPI. This means that for most Vert.x components, you can chain calls together in a nicely
 readable manner.
 
-[source,java]
+[source,java,subs=attributes+]
 ----
 vertx.eventBus()
      .consumer("some-address")
@@ -279,7 +281,7 @@ Pattern implementations you may have seen before is that Vert.x runs MULTIPLE ev
 
 The basic contents of a Vertical are a class definition and a `start` method, as shown here:
 
-[source,java]
+[source,java,subs=attributes+]
 ----
 package com.redhat.qcon;
 
@@ -302,7 +304,7 @@ implement traditional blocking Java code using the `vertx.executeBlocking` metho
 call via [JNDI](http://www.oracle.com/technetwork/java/jndi/index.html) to look up something in an LDAP directory, we
 might do something like:
 
-[source,java]
+[source,java,subs=attributes+]
 ----
 vertx.executeBlocking(future -> {
     // Make our JNDI calls here!
@@ -318,7 +320,7 @@ run single-threaded and potentially across multiple threads/cores in parallel, w
 will not cause race conditions or concurrency problems. To facilitate this, Vert.x has an Event Bus through which we
 can send/receive messages between Verticles. A simple example of using the event bus might look like:
 
-[source,java]
+[source,java,subs=attributes+]
 ----
 // Create a consumer and reply when we get PING messages
 vertx.eventBus()
@@ -346,7 +348,7 @@ Another best practice is that we should practice "test first" development. To fu
 by writing a failing test for the feature we intent to implement.
 
 .src/test/groovy/com/redhat/qcon/MainVerticleSpec.groovy
-[source,groovy]
+[source,groovy,subs=attributes+]
 ----
 package com.redhat.qcon
 
@@ -400,7 +402,7 @@ a format for writing data-driven tests which we will use and explain later.
 Now that we have written our test, here's how I would implement the feature code.
 
 .Implementing Kubernetes ConfigMap Support
-[source,java]
+[source,java,subs=attributes+]
 ----
 package com.redhat.qcon;
 
@@ -503,7 +505,7 @@ and then expose that business logic on the event bus in a more consumable manner
 #### The Interface
 All service proxies start with an Interface definition which looks something like this:
 
-[source,java]
+[source,java,subs=attributes+]
 ----
 package com.redhat.qcon.services.noun;
 
@@ -543,7 +545,7 @@ by the underlying runtime to provide a simple means of wiring up the service pro
 
 Now that we have an interface, we need to create an implementation:
 
-[source,java]
+[source,java,subs=attributes+]
 ----
 package com.redhat.qcon.services.noun;
 
@@ -580,7 +582,7 @@ public class NounServiceImpl implements NounService {
 And finally, we must create a `package-info.java` file annotated with `@ModuleGen` in order for the
 Vert.x annotation processor to work.
 
-[source,java]
+[source,java,subs=attributes+]
 ----
 @ModuleGen(name = "insult", groupPackage = "com.redhat.qcon.services")
 package com.redhat.qcon;

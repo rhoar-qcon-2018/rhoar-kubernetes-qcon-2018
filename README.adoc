@@ -32,8 +32,8 @@ Some of the tools we will leverage in this workshop are listed below:
 
 ## What we are going to do during today's workshop
 
-. Load up a complete DevOps environment in Kubernetes using Ansible automation
-. Load our existing application code into this DevOps environment and wire it up to our GitHub repos
+. <<#section-1,▼>> Load up a complete DevOps environment in Kubernetes using Ansible automation
+. <<#section-2,▼>> Load our existing application code into this DevOps environment and wire it up to our GitHub repos
 . <<#section-3,▼>> Create a Vert.x microservice project to work with these existing services and communicate with each other
 .. <<#section-3-a,▼>> Set Up For Testing
 .. <<#section-3-b,▼>> Familiarize ourselves with some basic Vert.x concepts
@@ -85,17 +85,18 @@ This will create a new Maven POM file populated based on the values you entered 
 
 After the POM file has been created, we will need to add some additional libraries for this microservice:
 
-1. vertx-web-api-contract
-1. vertx-rx-java2
-1. vertx-service-proxy
-1. vertx-sockjs-service-proxy
-1. vertx-config-kubernetes-configmap
-1. vertx-codegen
-1. vertx-lang-js
+* vertx-web-api-contract
+* vertx-rx-java2
+* vertx-service-proxy
+* vertx-sockjs-service-proxy
+* vertx-config-kubernetes-configmap
+* vertx-codegen
+* vertx-lang-js
 
 All of these are within the `io.vertx` Maven group ID and covered via the depenency management setup 
 from the initialization process, so we can put them in without versions as follows:
 
+.POM Excerpt Showing Provided and Processor Dependencies
 [source,xml]
 ----
 <dependency>
@@ -131,38 +132,44 @@ from the initialization process, so we can put them in without versions as follo
 </dependency>
 ----
 
-### Set Up For Testing
+### [[section-3-a]] Set Up For Testing
 
 Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. Personally,
 I prefer BDD style tests, so for this workshop I will be demonstrating 
 [SpockFramework](http://spockframework.org/spock/docs/1.1/index.html). To use Spock, we will need to
 add some additional dependencies to our POM:
 
+.Adding Libraries For Spock Framework and Code Coverage
 [source,xml]
 ----
 <dependency>
     <groupId>org.codehaus.groovy</groupId>
     <artifactId>groovy-all</artifactId>
+    <version>2.4.12</version>
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.javassist</groupId>
     <artifactId>javassist</artifactId>
+    <version>3.21.0-GA</version>
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.spockframework</groupId>
     <artifactId>spock-core</artifactId>
+    <version>1.1-groovy-2.4</version>
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>net.bytebuddy</groupId>
     <artifactId>byte-buddy</artifactId>
+    <version>1.7.5</version>
     <scope>test</scope>
 </dependency>
 <dependency> <!-- enables mocking of classes without default constructor (together with CGLIB) -->
     <groupId>org.objenesis</groupId>
     <artifactId>objenesis</artifactId>
+    <version>2.6</version>
     <scope>test</scope>
 </dependency>
 ----
@@ -170,66 +177,67 @@ add some additional dependencies to our POM:
 We will also need to add the GMavenPlus plugin and configure the Maven SureFire plugin to be able to
 run the Spock tests:
 
+.Add Maven Plugins For Spock Framework and Code Coverage
 [source,xml]
 ----
 <build>
-        <plugins>
-        ... SNIP ...
-            <plugin>    <!-- Add support for compiling Groovy files -->
-                <groupId>org.codehaus.gmavenplus</groupId>
-                <artifactId>gmavenplus-plugin</artifactId>
-                <version>1.5</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>addSources</goal>
-                            <goal>addTestSources</goal>
-                            <goal>generateStubs</goal>
-                            <goal>compile</goal>
-                            <goal>testGenerateStubs</goal>
-                            <goal>testCompile</goal>
-                            <goal>removeStubs</goal>
-                            <goal>removeTestStubs</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>    <!-- Configure the Maven SureFire plugin to use Groovy Spec files for test -->
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.6</version>
-                <configuration>
-                    <useFile>false</useFile>
-                    <includes>
-                        <include>**/*Spec.groovy</include>
-                    </includes>
-                </configuration>
-            </plugin>
-            <plugin>    <!-- Configure JaCoCo to be able to extract code coverage information -->
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.6.201602180812</version>
-                <executions>
-                    <execution>
-                        <id>jacoco-initialize</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>jacoco-site</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        ... SNIP ...
-        </plugins>
-    </build>
+    <plugins>
+    ... SNIP ...
+        <plugin>    <!-- Add support for compiling Groovy files -->
+            <groupId>org.codehaus.gmavenplus</groupId>
+            <artifactId>gmavenplus-plugin</artifactId>
+            <version>1.5</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>addSources</goal>
+                        <goal>addTestSources</goal>
+                        <goal>generateStubs</goal>
+                        <goal>compile</goal>
+                        <goal>testGenerateStubs</goal>
+                        <goal>testCompile</goal>
+                        <goal>removeStubs</goal>
+                        <goal>removeTestStubs</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        <plugin>    <!-- Configure the Maven SureFire plugin to use Groovy Spec files for test -->
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.6</version>
+            <configuration>
+                <useFile>false</useFile>
+                <includes>
+                    <include>**/*Spec.groovy</include>
+                </includes>
+            </configuration>
+        </plugin>
+        <plugin>    <!-- Configure JaCoCo to be able to extract code coverage information -->
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.7.6.201602180812</version>
+            <executions>
+                <execution>
+                    <id>jacoco-initialize</id>
+                    <goals>
+                        <goal>prepare-agent</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>jacoco-site</id>
+                    <phase>test</phase>
+                    <goals>
+                        <goal>report</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    ... SNIP ...
+    </plugins>
+</build>
 ----
 
-### Basic Vert.x Concepts
+### [[section-3-b]] Basic Vert.x Concepts
 
 The [Vert.x Core Documentation](https://vertx.io/docs/vertx-core/java/) is a really great reference to some of the basic
 concepts in Vert.x. We'll cover a few of these things here, but please feel free to go to the official docs for more
@@ -323,7 +331,7 @@ vertx.timerStream(300)
             .subscribe(m -> System.out.println(m.body())));
 ----
 
-### Implement Kubernetes Config
+### [[section-3-c]] Implement Kubernetes Config
 Following one of the tenets of [12 Factor Applications](https://12factor.net/config), we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
 by providing a comprehensive set of APIs for loading the application's configuration. In our case, since we are
@@ -332,9 +340,59 @@ deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration
 Another best practice is that we should practice "test first" development. To further that concept, let's start
 by writing a failing test for the feature we intent to implement.
 
+.src/test/groovy/com/redhat/qcon/MainVerticleSpec.groovy
+[source,groovy]
+----
+package com.redhat.qcon
 
+import io.vertx.core.Future
+import io.vertx.core.Vertx
+import spock.lang.Specification
+import spock.util.concurrent.AsyncConditions
 
-Here's how I would do it.
+class MainVerticleSpec extends Specification {
+
+    def 'Test Vert.x configuration loading'() {
+        given: 'An instance of Vert.x'  // <1>
+            def vertx = Vertx.vertx()
+        and: 'An instance of a Vert.x Future'  // <2>
+            def fut = Future.future()
+        and: '''An instance of Spock's AsyncConditions''' // <3>
+            def async = new AsyncConditions<1>
+
+        when: 'We attempt to deploy the main Verticle'  // <4>
+            vertx.deployVerticle(new MainVerticle(), fut.completer())
+
+        then: 'Expect that the correct configuration is found and loaded'
+            fut.setHandler({ res ->
+                async.evaluate { // <5>
+                    res.succeeded() // <6>
+                    vertx.getOrCreateContext().config().hasProperty('noun') // <7>
+                    vertx.getOrCreateContext().config().hasProperty('adjective') // <8>
+                    vertx.getOrCreateContext().config().hasProperty('http') // <9>
+                }
+            })
+
+        cleanup: 'Await the async operations'  // <10>
+            async.await(10)
+    }
+}
+----
+<1> Set our starting conditions. In this case, we need a running Vert.x instance
+<2> Using the `and` block, we can specify additional `given`, `when`, or `then` conditions
+<3> Use the `when` block to call the code under test
+<4> The `AsyncConditions` class is provided by Spock to allow us to check for one or more asynchronous events
+<5> Use the `async.evaluate` to tell Spock that we are waiting for an asynchronous operation
+<6> Check to ensure that the future completed successfully
+<7> Check to ensure that the config contains a `noun` property
+<8> Check to ensure that the config contains a `adjective` property
+<9> Check to ensure that the config contains a `http` property
+<10> Tell Spock to wait `10` seconds for the async operations to complete
+
+Spock tests are written using a format known as Gherkin. Gherkin formats tests as given-when-then. Spock also has
+a format for writing data-driven tests which we will use and explain later.
+
+Now that we have written our test, here's how I would implement the feature code.
 
 .Implementing Kubernetes ConfigMap Support
 [source,java]
@@ -342,35 +400,30 @@ Here's how I would do it.
 package com.redhat.qcon;
 
 import io.reactivex.Maybe;
+import io.reactivex.Single;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.config.ConfigRetriever;
 import io.vertx.reactivex.core.AbstractVerticle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MainVerticle extends AbstractVerticle {
 
-    @Override
-    public void start(Future<Void> startFuture) {
+    private static final Logger LOG = LoggerFactory.getLogger(MainVerticle.class);
 
-        initConfigRetriever()
-                .doOnError(startFuture::fail)
-                .doOnComplete(startFuture::complete)
-                .subscribe(c -> {
-                    context.config().mergeIn(c);
-                });
-    }
-
-    Maybe<JsonObject> initConfigRetriever() {
+    Single<JsonObject> initConfigRetriever() {                      // <1>
         // Load the default configuration from the classpath
-        ConfigStoreOptions defaultOpts = new ConfigStoreOptions()
+        LOG.info("Configuration store loading.");
+        ConfigStoreOptions defaultOpts = new ConfigStoreOptions()   // <2>
                 .setType("file")
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "insult_default_config.json"));
 
         // Load container specific configuration from a specific file path inside of the container
-        ConfigStoreOptions localConfig = new ConfigStoreOptions()
+        ConfigStoreOptions localConfig = new ConfigStoreOptions()   // <3>
                 .setType("file")
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "/opt/docker_config.json"))
@@ -379,30 +432,61 @@ public class MainVerticle extends AbstractVerticle {
         // Add the default and container config options into the ConfigRetriever
         ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()
                 .addStore(defaultOpts)
-                .addStore(localConfig);
+                .addStore(localConfig); // <4>
 
         // Check to see if we are running on Kubernetes/OCP
-        if (System.getenv().containsKey("KUBERNETES_NAMESPACE")) {
+        if (System.getenv().containsKey("KUBERNETES_NAMESPACE")) {  // <5>
 
             // When running inside of Kubernetes, configure the application to also load from a ConfigMap
-            ConfigStoreOptions confOpts = new ConfigStoreOptions()
+            ConfigStoreOptions confOpts = new ConfigStoreOptions()  // <6>
                     .setType("configmap")
                     .setConfig(new JsonObject()
                             .put("name", "insult-config")
                             .put("optional", true)
                     );
-            retrieverOptions.addStore(confOpts);
+            retrieverOptions.addStore(confOpts);                    // <7>
         }
 
         // Create the ConfigRetriever and return the Maybe when complete
-        return ConfigRetriever.create(vertx, retrieverOptions).rxGetConfig().toMaybe();
+        return ConfigRetriever.create(vertx, retrieverOptions).rxGetConfig();
+    }
+
+    @Override
+    public void start(Future<Void> startFuture) {
+
+        initConfigRetriever()   // <8>
+                .doOnError(startFuture::fail)                       // <9>
+                .subscribe(c -> {
+                    LOG.info(c.encodePrettily());
+                    context.config().mergeIn(c);                    // <10>
+                    startFuture.complete();                         // <11>
+                });
     }
 }
 ----
+<1> Define a new method which returns a `Single` with the configuration
+<2> Create an instance of `ConfigStoreOptions` to load the default config from the classpath
+<3> Create an instance of `ConfigStoreOptions` to load configuration data from inside a Docker container
+<4> Attach the `ConfigStoreOptions` to the `ConfigRetrieverOptions`
+<5> Check for an environment variable which will indicate we are running in Kubernetes/OpenShift
+<6> Create an instance of `ConfigStoreOptions` to load configuration data from Kubernetes ConfigMaps
+<7> Attach the new `ConfigStoreOptions` to the `ConfigRetrieverOptions`
+<8> From inside of the `start` method, call `initConfigRetriever`
+<9> Set an error handler for the `Single` which will fail the Verticle deployment when an error is encountered
+<10> Merge the loaded configuration into the global Vert.x configuration
+<11> Complete the `startFuture` successfully
 
 This example replaces the generic Verticle type with one which has been refactored to use
 Reactive Extensions. Most of the rest of this Workshop with rely on using ReactiveX for 
 our Vert.x code.
+
+[NOTE]
+====
+When using the Vert.x ConfigStoreOptions, remember that the order in which ConfigStoreOptions are added
+is significant. Items added later will override values from items which were loaded earlier. For example, if the
+default config sets `noun.host = 'localhost'`, but the Kubernetes ConfigMap sets `noun.host = '192.168.1.10'`,
+the ConfigMap value will take precedence.
+====
 
 ### Implement a new [Service Proxy](https://vertx.io/docs/vertx-service-proxy/java/)
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first 

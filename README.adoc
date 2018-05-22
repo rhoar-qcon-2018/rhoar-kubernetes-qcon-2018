@@ -5,7 +5,6 @@ v1.0, 2018-05-22
 ifndef::icons[:conum-guard-java: // //]
 :conum-guard-groovy: //
 ifndef::icons[:conum-guard-groovy: // //]
-
 ## Using Red Hat OpenShift Application Runtimes
 
 ## Overview
@@ -24,18 +23,18 @@ to build, test, deploy, and validate microservices quickly and reliably.
 
 Some of the tools we will leverage in this workshop are listed below:
 
-* [Kubernetes](https://kubernetes.io/) (In the form of OpenShift Container Platform 3.9)
-* [Jenkins](https://jenkins.io/) (For continuous integration and continuous delivery)
-* [SonarQube](https://www.sonarqube.org/) (For code quality analysis)
-* [Sonatype Nexus](https://www.sonatype.com/nexus-repository-sonatype) (For an artifact repository)
-* [OWASP Zed Attack Proxy](https://www.owasp.org/index.php/OWASP_Zed_Attack_Proxy_Project) (For security analysis of web applications)
-* [OWASP Dependency Check](https://www.owasp.org/index.php/OWASP_Dependency_Check)
-* [Vert.x](http://vertx.io/) - A toolkit for developing reactive applications on the JVM
-* [Java](http://openjdk.org/) - A modern and high-performance programming language
-* [Spock Framework](http://spockframework.org/spock/docs/1.1/index.html) A testing and specification framework for Java and Groovy applications
-* [Node.js](https://nodejs.org/) - A programming language well suited to quickly develop applications
-* [Spring Boot](https://projects.spring.io/spring-boot/) An alternative to writing applications using JavaEE
-* [HoverFly](https://hoverfly.readthedocs.io/en/latest/) A service virtualization tool which simplifies testing Microservices
+* https://kubernetes.io/[Kubernetes] (In the form of OpenShift Container Platform 3.9)
+* https://jenkins.io/[Jenkins] (For continuous integration and continuous delivery)
+* https://www.sonarqube.org/[SonarQube] (For code quality analysis)
+* https://www.sonatype.com/nexus-repository-sonatype[Sonatype Nexus] (For an artifact repository)
+* https://www.owasp.org/index.php/OWASP_Zed_Attack_Proxy_Project[OWASP Zed Attack Proxy] (For security analysis of web applications)
+* https://www.owasp.org/index.php/OWASP_Dependency_Check[OWASP Dependency Check]
+* http://vertx.io/[Vert.x] - A toolkit for developing reactive applications on the JVM
+* http://openjdk.org/[Java] - A modern and high-performance programming language
+* http://spockframework.org/spock/docs/1.1/index.html[Spock Framework] A testing and specification framework for Java and Groovy applications
+* https://nodejs.org/[Node.js] - A programming language well suited to quickly develop applications
+* https://projects.spring.io/spring-boot/[Spring Boot] An alternative to writing applications using JavaEE
+* https://hoverfly.readthedocs.io/en/latest/[HoverFly] A service virtualization tool which simplifies testing Microservices
 
 ## What we are going to do during today's workshop
 
@@ -47,7 +46,7 @@ Some of the tools we will leverage in this workshop are listed below:
 .. <<#section-3-c,▼>> Implement Vert.x Kubernetes Config
 .. <<#section-3-d,▼>> Implement clients for the noun and adjective services using OpenAPI specifications
 .. <<#section-3-e,▼>> Implement a REST API using OpenAPI 3 specifications and service proxies
-.. <<#section-3-f,▼>>Implement a new [service proxy](https://vertx.io/docs/vertx-service-proxy/java/)
+.. <<#section-3-f,▼>>Implement a new https://vertx.io/docs/vertx-service-proxy/java/[service proxy]
 .. <<#section-3-g,▼>>Implement a reactive Kafka system to stream "liked" insults
 .. <<#section-3-h,▼>>Generate JavaScript code to integrate our application into the UI
 .. <<#section-3-i,▼>>Implement circuit breakers to prevent poor user experience
@@ -143,7 +142,7 @@ from the initialization process, so we can put them in without versions as follo
 
 Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. Personally,
 I prefer BDD style tests, so for this workshop I will be demonstrating 
-[SpockFramework](http://spockframework.org/spock/docs/1.1/index.html). To use Spock, we will need to
+http://spockframework.org/spock/docs/1.1/index.html[SpockFramework]. To use Spock, we will need to
 add some additional dependencies to our POM:
 
 .Adding Libraries For Spock Framework and Code Coverage
@@ -246,7 +245,7 @@ run the Spock tests:
 
 ### [[section-3-b]] Basic Vert.x Concepts
 
-The [Vert.x Core Documentation](https://vertx.io/docs/vertx-core/java/) is a really great reference to some of the basic
+The https://vertx.io/docs/vertx-core/java/[Vert.x Core Documentation] is a really great reference to some of the basic
 concepts in Vert.x. We'll cover a few of these things here, but please feel free to go to the official docs for more
 in-depth information.
 
@@ -264,6 +263,7 @@ vertx.eventBus()
 
 Another core concept of Vert.x is that everything which is done in a Verticle should be done in a non-blocking way. 
 To support this, Vert.x provides non-blocking implementations of many common functionalities such as:
+
 * File I/O
 * Network I/O
 * Database Access
@@ -274,10 +274,10 @@ To support this, Vert.x provides non-blocking implementations of many common fun
 
 #### Verticles
 From the new project we generated via Maven, we can see that a class called `MainVerticle` was created. 
-[Verticles](https://vertx.io/docs/vertx-core/java/#_verticles) are the basic unit of an application in Vert.x. By default,
+https://vertx.io/docs/vertx-core/java/#_verticles[Verticles] are the basic unit of an application in Vert.x. By default,
 Verticles are run single-threaded on an event loop (Reactor Pattern). The one difference between this and other Reactor 
 Pattern implementations you may have seen before is that Vert.x runs MULTIPLE event loops in parallel, calling it 
-[Multi-Reactor](https://vertx.io/docs/vertx-core/java/#_reactor_and_multi_reactor).
+https://vertx.io/docs/vertx-core/java/#_reactor_and_multi_reactor[Multi-Reactor].
 
 The basic contents of a Vertical are a class definition and a `start` method, as shown here:
 
@@ -301,7 +301,7 @@ public class MainVerticle extends AbstractVerticle {
 Because Vert.x uses event loops for Verticles, we must always ensure that we do not call blocking code and thus block
 the event loop. Since Vert.x does not have non-blocking APIs for every situation, it provides a means for use to 
 implement traditional blocking Java code using the `vertx.executeBlocking` method. For example, if we wanted to make a
-call via [JNDI](http://www.oracle.com/technetwork/java/jndi/index.html) to look up something in an LDAP directory, we
+call via http://www.oracle.com/technetwork/java/jndi/index.html[JNDI] to look up something in an LDAP directory, we
 might do something like:
 
 [source,java,subs=attributes+]
@@ -314,7 +314,7 @@ vertx.executeBlocking(future -> {
 });
 ----
 
-#### Event Bus
+#### [[section-3-b-eventbus]] Event Bus
 The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to 
 run single-threaded and potentially across multiple threads/cores in parallel, we need a safe way to share data which
 will not cause race conditions or concurrency problems. To facilitate this, Vert.x has an Event Bus through which we
@@ -339,7 +339,7 @@ vertx.timerStream(300)
 ----
 
 ### [[section-3-c]] Implement Kubernetes Config
-Following one of the tenets of [12 Factor Applications](https://12factor.net/config), we will want to store our
+Following one of the tenets of https://12factor.net/config[12 Factor Applications], we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
 by providing a comprehensive set of APIs for loading the application's configuration. In our case, since we are
 deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration. 
@@ -495,9 +495,9 @@ default config sets `noun.host = 'localhost'`, but the Kubernetes ConfigMap sets
 the ConfigMap value will take precedence.
 ====
 
-### Implement a new [Service Proxy](https://vertx.io/docs/vertx-service-proxy/java/)
+### Implement a new https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first 
-[example](#event-bus) of sending and receiving on the event bus, we used a producer and a consumer based on 
+<<#section-3-b-eventbus,example>> of sending and receiving on the event bus, we used a producer and a consumer based on
 rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer
 experience. Instead, we can use Vert.x Service Proxies to provide an easier way to implement business logic
 and then expose that business logic on the event bus in a more consumable manner.
@@ -594,7 +594,7 @@ We have left the service implementation class as a stub so that we can delve dee
 in the next section.
 
 ### Implement REST clients
-Vert.x recently introduced significant support for the [OpenAPI v3 Specification](https://www.openapis.org/) language. 
+Vert.x recently introduced significant support for the https://www.openapis.org/[OpenAPI v3 Specification] language. 
 OpenAPI 3 allows us to describe a REST API using YAML or JSON. From those specifications, we can create both server
 and client implementations for the REST API. We will use this facility in Vert.x to create REST API clients for the
 Noun and Adjective services which were previously implemented using NodeJS and Spring Boot. Here's how:

@@ -1,5 +1,7 @@
-:conum-guard-js: //
-ifndef::icons[:conum-guard-js: // //]
+:conum-guard-java: //
+ifndef::icons[:conum-guard-java: // //]
+:conum-guard-groovy: //
+ifndef::icons[:conum-guard-groovy: // //]
 
 # Reactive Microservices on Kubernetes
 ## Using Red Hat OpenShift Application Runtimes
@@ -356,27 +358,27 @@ import spock.util.concurrent.AsyncConditions
 class MainVerticleSpec extends Specification {
 
     def 'Test Vert.x configuration loading'() {
-        given: 'An instance of Vert.x'  {conum-guard-js} <1>
+        given: 'An instance of Vert.x'  {conum-guard-groovy} <1>
             def vertx = Vertx.vertx()
-        and: 'An instance of a Vert.x Future'  {conum-guard-js} <2>
+        and: 'An instance of a Vert.x Future'  {conum-guard-groovy} <2>
             def fut = Future.future()
-        and: '''An instance of Spock's AsyncConditions''' {conum-guard-js} <3>
-            def async = new AsyncConditions<1>
+        and: '''An instance of Spock's AsyncConditions''' {conum-guard-groovy} <3>
+            def async = new AsyncConditions(1)
 
-        when: 'We attempt to deploy the main Verticle'  {conum-guard-js} <4>
+        when: 'We attempt to deploy the main Verticle'  {conum-guard-groovy} <4>
             vertx.deployVerticle(new MainVerticle(), fut.completer())
 
         then: 'Expect that the correct configuration is found and loaded'
             fut.setHandler({ res ->
-                async.evaluate { {conum-guard-js} <5>
-                    res.succeeded() {conum-guard-js} <6>
-                    vertx.getOrCreateContext().config().hasProperty('noun') {conum-guard-js} <7>
-                    vertx.getOrCreateContext().config().hasProperty('adjective') {conum-guard-js} <8>
-                    vertx.getOrCreateContext().config().hasProperty('http') {conum-guard-js} <9>
+                async.evaluate { {conum-guard-groovy} <5>
+                    res.succeeded() {conum-guard-groovy} <6>
+                    vertx.getOrCreateContext().config().hasProperty('noun') {conum-guard-groovy} <7>
+                    vertx.getOrCreateContext().config().hasProperty('adjective') {conum-guard-groovy} <8>
+                    vertx.getOrCreateContext().config().hasProperty('http') {conum-guard-groovy} <9>
                 }
             })
 
-        cleanup: 'Await the async operations'  {conum-guard-js} <10>
+        cleanup: 'Await the async operations'  {conum-guard-groovy} <10>
             async.await(10)
     }
 }
@@ -417,16 +419,16 @@ public class MainVerticle extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MainVerticle.class);
 
-    Single<JsonObject> initConfigRetriever() {                      {conum-guard-js} <1>
+    Single<JsonObject> initConfigRetriever() {                      {conum-guard-groovy} <1>
         // Load the default configuration from the classpath
         LOG.info("Configuration store loading.");
-        ConfigStoreOptions defaultOpts = new ConfigStoreOptions()   {conum-guard-js} <2>
+        ConfigStoreOptions defaultOpts = new ConfigStoreOptions()   {conum-guard-groovy} <2>
                 .setType("file")
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "insult_default_config.json"));
 
         // Load container specific configuration from a specific file path inside of the container
-        ConfigStoreOptions localConfig = new ConfigStoreOptions()   {conum-guard-js} <3>
+        ConfigStoreOptions localConfig = new ConfigStoreOptions()   {conum-guard-groovy} <3>
                 .setType("file")
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "/opt/docker_config.json"))
@@ -435,19 +437,19 @@ public class MainVerticle extends AbstractVerticle {
         // Add the default and container config options into the ConfigRetriever
         ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()
                 .addStore(defaultOpts)
-                .addStore(localConfig); {conum-guard-js} <4>
+                .addStore(localConfig); {conum-guard-groovy} <4>
 
         // Check to see if we are running on Kubernetes/OCP
-        if (System.getenv().containsKey("KUBERNETES_NAMESPACE")) {  {conum-guard-js} <5>
+        if (System.getenv().containsKey("KUBERNETES_NAMESPACE")) {  {conum-guard-groovy} <5>
 
             // When running inside of Kubernetes, configure the application to also load from a ConfigMap
-            ConfigStoreOptions confOpts = new ConfigStoreOptions()  {conum-guard-js} <6>
+            ConfigStoreOptions confOpts = new ConfigStoreOptions()  {conum-guard-groovy} <6>
                     .setType("configmap")
                     .setConfig(new JsonObject()
                             .put("name", "insult-config")
                             .put("optional", true)
                     );
-            retrieverOptions.addStore(confOpts);                    {conum-guard-js} <7>
+            retrieverOptions.addStore(confOpts);                    {conum-guard-groovy} <7>
         }
 
         // Create the ConfigRetriever and return the Maybe when complete
@@ -457,12 +459,12 @@ public class MainVerticle extends AbstractVerticle {
     @Override
     public void start(Future<Void> startFuture) {
 
-        initConfigRetriever()   {conum-guard-js} <8>
-                .doOnError(startFuture::fail)                       {conum-guard-js} <9>
+        initConfigRetriever()   {conum-guard-java} <8>
+                .doOnError(startFuture::fail)                       {conum-guard-groovy} <9>
                 .subscribe(c -> {
                     LOG.info(c.encodePrettily());
-                    context.config().mergeIn(c);                    {conum-guard-js} <10>
-                    startFuture.complete();                         {conum-guard-js} <11>
+                    context.config().mergeIn(c);                    {conum-guard-groovy} <10>
+                    startFuture.complete();                         {conum-guard-groovy} <11>
                 });
     }
 }

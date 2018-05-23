@@ -488,6 +488,15 @@ default config sets `noun.host = 'localhost'`, but the Kubernetes ConfigMap sets
 the ConfigMap value will take precedence.
 ====
 
+[NOTE]
+====
+The single Spock test which we wrote allows us to achieve 100% line AND branch coverage without using ANY dependency
+injection because it is a limited form of integration test. Admittedly, the test does not test the Kubernetes ConfigMap
+unless it is run inside of Kubernetes/OpenShift, but that would violate the rule of *_Don't test the framework, only test
+your code_*. Keep in mind that *I am NOT advocating for 100% coverage*, as that leads to spending a lot of
+time and resources for little gain. You should, however, aim to cover all critical paths in your tests.
+====
+
 === Implement a new https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first 
 <<#section-3-b-eventbus,example>> of sending and receiving on the event bus, we used a producer and a consumer based on
@@ -498,6 +507,7 @@ and then expose that business logic on the event bus in a more consumable manner
 ==== The Interface
 All service proxies start with an Interface definition which looks something like this:
 
+.src/main/java/com/redhat/qcon/services/NounService.java
 [source,java,subs=attributes+]
 ----
 package com.redhat.qcon.services.noun;
@@ -536,8 +546,22 @@ All of the business logic methods return "void" or the can be fluent and return 
 The two static methods at the beginning are boilerplate for Service Proxies. These methods are used
 by the underlying runtime to provide a simple means of wiring up the service proxy.
 
-Now that we have an interface, we need to create an implementation:
+[NOTE]
+====
+The business logic methods do not have an access modifier set (e.g. public/private/protected). This means that it
+defaults to *_package private_*. By doing this, when we implement unit/BDD tests with Spock we can call those methods
+directly.
+====
 
+Now that we have an interface, we need to create a series of tests for that code:
+
+.src/test/groovy/com/redhat/qcon/services/NounServiceImplSpec.groovy
+[source,java,subs=attributes+]
+----
+
+----
+
+.src/main/java/com/redhat/qcon/services/noun/NounService.java
 [source,java,subs=attributes+]
 ----
 package com.redhat.qcon.services.noun;

@@ -480,7 +480,7 @@ This example replaces the generic Verticle type with one which has been refactor
 Reactive Extensions. Most of the rest of this Workshop with rely on using ReactiveX for 
 our Vert.x code.
 
-[NOTE]
+[IMPORTANT]
 ====
 When using the Vert.x ConfigStoreOptions, remember that the order in which ConfigStoreOptions are added
 is significant. Items added later will override values from items which were loaded earlier. For example, if the

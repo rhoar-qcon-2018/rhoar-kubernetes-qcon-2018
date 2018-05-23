@@ -443,10 +443,10 @@ public class MainVerticle extends AbstractVerticle {
                 );
 
         // Add the default and container config options into the ConfigRetriever
-        ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()
+        ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()  {conum-guard-groovy} <5>
                 .addStore(defaultOpts)
                 .addStore(localConfig)
-                .addStore(confOpts);                                            {conum-guard-groovy} <5>
+                .addStore(confOpts);
 
         // Create the ConfigRetriever and return the Maybe when complete
         return ConfigRetriever.create(vertx, retrieverOptions).rxGetConfig();   {conum-guard-groovy} <6>

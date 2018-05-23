@@ -1,11 +1,10 @@
-= Reactive Microservices on Kubernetes
+= Reactive Microservices on Kubernetes: Using Red Hat OpenShift Application Runtimes
 Deven Phillips <deven.phillips@redhat.com>
 v1.0, 2018-05-22
 :conum-guard-java: //
 ifndef::icons[:conum-guard-java: // //]
 :conum-guard-groovy: //
 ifndef::icons[:conum-guard-groovy: // //]
-== Using Red Hat OpenShift Application Runtimes
 
 == Overview
 Microservices and Containers have changed the entire landscape of software
@@ -299,8 +298,8 @@ public class MainVerticle extends AbstractVerticle {
 
 ==== Non-Blocking
 Because Vert.x uses event loops for Verticles, we must always ensure that we do not call blocking code and thus block
-the event loop. Since Vert.x does not have non-blocking APIs for every situation, it provides a means for use to 
-implement traditional blocking Java code using the `vertx.executeBlocking` method. For example, if we wanted to make a
+the event loop. Since Vert.x does not have non-blocking APIs for every situation, it provides a method of
+implementing traditional blocking Java code using the `vertx.executeBlocking` method. For example, if we wanted to make a
 call via http://www.oracle.com/technetwork/java/jndi/index.html[JNDI] to look up something in an LDAP directory, we
 might do something like:
 
@@ -406,7 +405,6 @@ Now that we have written our test, here's how I would implement the feature code
 ----
 package com.redhat.qcon;
 
-import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -421,52 +419,48 @@ public class MainVerticle extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MainVerticle.class);
 
-    Single<JsonObject> initConfigRetriever() {                      {conum-guard-groovy} <1>
+    Single<JsonObject> initConfigRetriever() {                                  {conum-guard-groovy} <1>
         // Load the default configuration from the classpath
         LOG.info("Configuration store loading.");
-        ConfigStoreOptions defaultOpts = new ConfigStoreOptions()   {conum-guard-groovy} <2>
+        ConfigStoreOptions defaultOpts = new ConfigStoreOptions()               {conum-guard-groovy} <2>
                 .setType("file")
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "insult_default_config.json"));
 
         // Load container specific configuration from a specific file path inside of the container
-        ConfigStoreOptions localConfig = new ConfigStoreOptions()   {conum-guard-groovy} <3>
+        ConfigStoreOptions localConfig = new ConfigStoreOptions()               {conum-guard-groovy} <3>
                 .setType("file")
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "/opt/docker_config.json"))
                 .setOptional(true);
 
+        // When running inside of Kubernetes, configure the application to also load from a ConfigMap
+        ConfigStoreOptions confOpts = new ConfigStoreOptions()                  {conum-guard-groovy} <4>
+                .setType("configmap")
+                .setConfig(new JsonObject()
+                        .put("name", "insult-config")
+                        .put("optional", true)
+                );
+
         // Add the default and container config options into the ConfigRetriever
         ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()
                 .addStore(defaultOpts)
-                .addStore(localConfig); {conum-guard-groovy} <4>
-
-        // Check to see if we are running on Kubernetes/OCP
-        if (System.getenv().containsKey("KUBERNETES_NAMESPACE")) {  {conum-guard-groovy} <5>
-
-            // When running inside of Kubernetes, configure the application to also load from a ConfigMap
-            ConfigStoreOptions confOpts = new ConfigStoreOptions()  {conum-guard-groovy} <6>
-                    .setType("configmap")
-                    .setConfig(new JsonObject()
-                            .put("name", "insult-config")
-                            .put("optional", true)
-                    );
-            retrieverOptions.addStore(confOpts);                    {conum-guard-groovy} <7>
-        }
+                .addStore(localConfig)
+                .addStore(confOpts);                                            {conum-guard-groovy} <5>
 
         // Create the ConfigRetriever and return the Maybe when complete
-        return ConfigRetriever.create(vertx, retrieverOptions).rxGetConfig();
+        return ConfigRetriever.create(vertx, retrieverOptions).rxGetConfig();   {conum-guard-groovy} <6>
     }
 
     @Override
     public void start(Future<Void> startFuture) {
 
-        initConfigRetriever()   {conum-guard-java} <8>
-                .doOnError(startFuture::fail)                       {conum-guard-groovy} <9>
+        initConfigRetriever()                                                   {conum-guard-groovy} <7>
+                .doOnError(startFuture::fail)                                   {conum-guard-groovy} <8>
                 .subscribe(c -> {
                     LOG.info(c.encodePrettily());
-                    context.config().mergeIn(c);                    {conum-guard-groovy} <10>
-                    startFuture.complete();                         {conum-guard-groovy} <11>
+                    context.config().mergeIn(c);                                {conum-guard-groovy} <9>
+                    startFuture.complete();                                     {conum-guard-groovy} <10>
                 });
     }
 }
@@ -474,14 +468,13 @@ public class MainVerticle extends AbstractVerticle {
 <1> Define a new method which returns a `Single` with the configuration
 <2> Create an instance of `ConfigStoreOptions` to load the default config from the classpath
 <3> Create an instance of `ConfigStoreOptions` to load configuration data from inside a Docker container
-<4> Attach the `ConfigStoreOptions` to the `ConfigRetrieverOptions`
-<5> Check for an environment variable which will indicate we are running in Kubernetes/OpenShift
-<6> Create an instance of `ConfigStoreOptions` to load configuration data from Kubernetes ConfigMaps
-<7> Attach the new `ConfigStoreOptions` to the `ConfigRetrieverOptions`
-<8> From inside of the `start` method, call `initConfigRetriever`
-<9> Set an error handler for the `Single` which will fail the Verticle deployment when an error is encountered
-<10> Merge the loaded configuration into the global Vert.x configuration
-<11> Complete the `startFuture` successfully
+<4> Create an instance of `ConfigStoreOptions` to load configuration data from Kubernetes ConfigMaps
+<5> Attach the `ConfigStoreOptions` to the `ConfigRetrieverOptions`
+<6> Return the RxJava2 `Single` which may be completed at a later time
+<7> From inside of the `start` method, call `initConfigRetriever`
+<8> Set an error handler for the `Single` which will fail the Verticle deployment when an error is encountered
+<9> Merge the loaded configuration into the global Vert.x configuration
+<10> Complete the `startFuture` successfully
 
 This example replaces the generic Verticle type with one which has been refactored to use
 Reactive Extensions. Most of the rest of this Workshop with rely on using ReactiveX for 

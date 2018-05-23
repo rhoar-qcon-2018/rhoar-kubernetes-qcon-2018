@@ -5,6 +5,7 @@ v1.0, 2018-05-22
 ifndef::icons[:conum-guard-java: // //]
 :conum-guard-groovy: //
 ifndef::icons[:conum-guard-groovy: // //]
+:icons: font
 
 == Overview
 Microservices and Containers have changed the entire landscape of software

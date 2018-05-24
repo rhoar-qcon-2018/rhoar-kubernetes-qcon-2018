@@ -1,12 +1,21 @@
 = Reactive Microservices on Kubernetes: Using Red Hat OpenShift Application Runtimes
-Deven Phillips <deven.phillips@redhat.com>
-v1.0, 2018-05-22
 :conum-guard-java: //
 ifndef::icons[:conum-guard-java: // //]
 :conum-guard-groovy: //
 ifndef::icons[:conum-guard-groovy: // //]
 :icons: font
+Deven Phillips, Jeremy Davis, Ram Maddali
+v1.0, 2018-05-22
 
+<<<
+[colophon]
+= Reactive Microservices and DevOps Pipelines on Kubernetes
+
+(c) 2018 Red Hat, Inc. - All Rights Reserved
+
+This document is designed by Deven Phillips, Jeremy Davis, and Ram Maddali.
+
+<<<
 == Overview
 Microservices and Containers have changed the entire landscape of software
 development in the last few years. We are now able to decompose our development
@@ -36,6 +45,7 @@ Some of the tools we will leverage in this workshop are listed below:
 * https://projects.spring.io/spring-boot/[Spring Boot] An alternative to writing applications using JavaEE
 * https://hoverfly.readthedocs.io/en/latest/[HoverFly] A service virtualization tool which simplifies testing Microservices
 
+<<<
 == What we are going to do during today's workshop
 
 . <<#section-1,▼>> Load up a complete DevOps environment in Kubernetes using Ansible automation
@@ -56,6 +66,7 @@ Some of the tools we will leverage in this workshop are listed below:
 . <<#section-6-b,▼>>Analyze our web application for security vulnerabilities using OWASP Zed Attack Proxy
 . <<#section-7-b,▼>>Analyze our the library dependencies of our services to check for vulnerable libraries
 
+<<<
 === [[section-3]] Create a new Vert.x project
 . Ensure that you have Apache Maven >= 3.3.9
 . From the `insult-service` directory, run the following command
@@ -138,6 +149,7 @@ from the initialization process, so we can put them in without versions as follo
 </dependency>
 ----
 
+<<<
 === [[section-3-a]] Set Up For Testing
 
 Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. Personally,
@@ -243,6 +255,7 @@ run the Spock tests:
 </build>
 ----
 
+<<<
 === [[section-3-b]] Basic Vert.x Concepts
 
 The https://vertx.io/docs/vertx-core/java/[Vert.x Core Documentation] is a really great reference to some of the basic
@@ -338,6 +351,7 @@ vertx.timerStream(300)
             .subscribe(m -> System.out.println(m.body())));
 ----
 
+<<<
 === [[section-3-c]] Implement Kubernetes Config
 Following one of the tenets of https://12factor.net/config[12 Factor Applications], we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
@@ -498,6 +512,7 @@ your code_*. Keep in mind that *I am NOT advocating for 100% coverage*, as that 
 time and resources for little gain. You should, however, aim to cover all critical paths in your tests.
 ====
 
+<<<
 === Implement a new https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first 
 <<#section-3-b-eventbus,example>> of sending and receiving on the event bus, we used a producer and a consumer based on
@@ -611,6 +626,7 @@ import io.vertx.codegen.annotations.ModuleGen;
 We have left the service implementation class as a stub so that we can delve deeper into HTTP clients
 in the next section.
 
+<<<
 === Implement REST clients
 Vert.x recently introduced significant support for the https://www.openapis.org/[OpenAPI v3 Specification] language. 
 OpenAPI 3 allows us to describe a REST API using YAML or JSON. From those specifications, we can create both server
@@ -619,5 +635,7 @@ Noun and Adjective services which were previously implemented using NodeJS and S
 
 1. Create a new class 
 
+<<<
 === Implement REST API
 ==== TODO: Using OpenAPI 3 Spec file to create REST API in Vert.x
+

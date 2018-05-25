@@ -52,6 +52,11 @@ Some of the tools we will leverage in this workshop are listed below:
 == What we are going to do during today's workshop
 
 . <<#section-1,▼>> Load up a complete DevOps environment in Kubernetes using Ansible automation
+.. <<#section-1-a,▼>> Download/Install OpenShift Client Tools
+.. <<#section-1-b,▼>> Clone The Repositories
+.. <<#section-1-c,▼>> Log In To OpenShift
+.. <<#section-1-d,▼>> Deploy Using Ansible
+.. <<#section-1-e,▼>> Final Configurations
 . <<#section-2,▼>> Load our existing application code into this DevOps environment and wire it up to our GitHub repos
 . <<#section-3,▼>> Create a Vert.x microservice project to work with these existing services and communicate with each other
 .. <<#section-3-a,▼>> Set Up For Testing
@@ -68,6 +73,111 @@ Some of the tools we will leverage in this workshop are listed below:
 . <<#section-5-b,▼>>Perform code quality analysis and unit/integration testing using SonarQube and HoverFly
 . <<#section-6-b,▼>>Analyze our web application for security vulnerabilities using OWASP Zed Attack Proxy
 . <<#section-7-b,▼>>Analyze our the library dependencies of our services to check for vulnerable libraries
+
+<<<
+=== [[section-1]] Load A Complete DevOps Environment In Kubernetes
+
+[NOTE]
+====
+While some of the process we will show here is specific to OpenShift, all of the same sorts of capabilities can
+be achieved using https://github.com/kubernetes/helm[Helm] in stock Kubernetes (Without the nice UI)
+====
+
+==== [[section-1-a]] Download/Install OpenShift Client Tools
+You can always download the latest OpenShift CLI tools from Github https://github.com/openshift/origin/releases[HERE]
+
+. Download the correct release for your platform
+. Extract the binary executable from the archive file
+. Place the `oc` command somewhere that it can be added to your executable PATH
+. Update your PATH to include the location of the `oc` command
+.. On *NIX systems, you can update your .<shell>rc files to add the location for `oc`
+.. On Windows systems, it is recommended to extract the archive into your *Documents* directory and add that folder to your PATH
+
+==== [[section-1-b]] Clone The Repositories
+
+. Open the repository https://github.com/rhoar-qcon-2018/insult-service[HERE]
+. Fork each of the repository to your own GitHub account
+. Open the repository https://github.com/rhoar-qcon-2018/rhoar-kubernetes-qcon-2018[HERE]
+. Fork each of the repository to your own GitHub account
+. In your fork of the `rhoar-kubernetes-qcon-2018` repository, edit the file `.gitmodules` to update the Git URL for the `insult-service` to point to your own fork
++
+[source,bash]
+[subs="specialcharacters,quotes"]
+----
+[submodule "ui-service"]
+	path = ui-service
+	url = git@github.com:rhoar-qcon-2018/ui-service.git
+[submodule "noun-service"]
+	path = noun-service
+	url = git@github.com:rhoar-qcon-2018/noun-service.git
+[submodule "adjective-service"]
+	path = adjective-service
+	url = git@github.com:rhoar-qcon-2018/adjective-service.git
+[submodule "insult-service"]
+	path = insult-service
+	url = git@github.com:YOUR_GITHUB_ACCOUNT_HERE/insult-service.git <1>
+[submodule "lab-infrastructure-as-code"]
+	path = lab-infrastructure-as-code
+	url = git@github.com:rhoar-qcon-2018/lab-infrastructure-as-code.git
+----
+. From your preferred git client:
+.. `git clone --recurse-submodules -j8 git@github.com:**YOUR_GITHUB_ACCOUNT_HERE**/rhoar-kubernetes-qcon-2018`
+
+==== [[section-1-c]] Log In To The OpenShift Cluster
+
+[source, bash]
+----
+$ oc login -u YOUR_USERNAME -p YOUR_PASSWORD https://console.qcon2018.rhpds.redhat.com/
+The server uses a certificate signed by an unknown authority.
+You can bypass the certificate check, but any data you send to the server could be intercepted by others.
+Use insecure connections? (y/n): y
+
+Login successful.
+
+You have access to the following projects and can switch between them with 'oc project <projectname>':
+
+  * my-project
+----
+
+==== [[section-1-d]] Deploy The DevOps environment using Ansible
+
+. Open a terminal which can execute Docker commands
+. Change directory to the location where you cloned the repositories
+. Change into the `lab-infrastructure-as-code` subdirectory
+. Execute the `run` script
+.. On Windows, use `run.bat`
+.. On *NIX, use `run.sh`
+. Wait a few minutes for the environment to finish provisioning
+
+==== [[section-1-e]] Final Configurations
+
+. Log in to the Web Console for the cluster https://console.qcon2018.rhpds.redhat.com/[HERE]
+. Open your DevOps Environment labelled as `USERNAME-labs-ci-cd`
+. Click on the link for *SonarQube* to open it in a new tab/window
+. Log in with `admin/admin`
+. Generate a new token when prompted and copy it to your clipboard
+. Return to the OpenShift Console, click the link for Jenkins
+. Log in with your OpenShift Username/Password
+. Click on **Manage Jenkins** and then click on **Configure System**
+. Locate section labelled **SonarQube servers** and if there is not already a configured server, add one as shown below:
++
+====
+Name: sonar
+
+Server URL: http://sonarqube:9000
+
+Server version: 5.3. or higher
+
+Server authentication token: <PASTE TOKEN HERE>
+
+SonarQube account login: <BLANK>
+
+SonarQube account password: <BLANK>
+====
+
+<<<
+=== [[section-2]]
+
 
 <<<
 === [[section-3]] Create a new Vert.x project

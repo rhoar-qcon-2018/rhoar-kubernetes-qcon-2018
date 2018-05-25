@@ -1,0 +1,15 @@
+[submodule "ui-service"]
+	path = ui-service
+	url = git@github.com:rhoar-qcon-2018/ui-service.git
+[submodule "noun-service"]
+	path = noun-service
+	url = git@github.com:rhoar-qcon-2018/noun-service.git
+[submodule "adjective-service"]
+	path = adjective-service
+	url = git@github.com:rhoar-qcon-2018/adjective-service.git
+[submodule "insult-service"]
+	path = insult-service
+	url = git@github.com:rhoar-qcon-2018/insult-service.git
+[submodule "lab-infrastructure-as-code"]
+	path = lab-infrastructure-as-code
+	url = git@github.com:rhoar-qcon-2018/lab-infrastructure-as-code.git

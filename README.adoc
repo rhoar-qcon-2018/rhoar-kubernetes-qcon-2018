@@ -51,31 +51,34 @@ Some of the tools we will leverage in this workshop are listed below:
 <<<
 == What we are going to do during today's workshop
 
-. <<#section-1,▼>> Load up a complete DevOps environment in Kubernetes using Ansible automation
-.. <<#section-1-a,▼>> Download/Install OpenShift Client Tools
-.. <<#section-1-b,▼>> Clone The Repositories
-.. <<#section-1-c,▼>> Log In To OpenShift
-.. <<#section-1-d,▼>> Deploy Using Ansible
-.. <<#section-1-e,▼>> Final Configurations
-. <<#section-2,▼>> Load our existing application code into this DevOps environment and wire it up to our GitHub repos
-. <<#section-3,▼>> Create a Vert.x microservice project to work with these existing services and communicate with each other
-.. <<#section-3-a,▼>> Set Up For Testing
-.. <<#section-3-b,▼>> Familiarize ourselves with some basic Vert.x concepts
-.. <<#section-3-c,▼>> Implement Vert.x Kubernetes Config
-.. <<#section-3-d,▼>> Implement clients for the noun and adjective services using OpenAPI specifications
-.. <<#section-3-e,▼>> Implement a REST API using OpenAPI 3 specifications and service proxies
-.. <<#section-3-f,▼>>Implement a new https://vertx.io/docs/vertx-service-proxy/java/[service proxy]
-.. <<#section-3-g,▼>>Implement a reactive Kafka system to stream "liked" insults
-.. <<#section-3-h,▼>>Generate JavaScript code to integrate our application into the UI
-.. <<#section-3-i,▼>>Implement circuit breakers to prevent poor user experience
-.. <<#section-3-j,▼>>Implement some BDD tests for our service
+. <<#section-1,▼>> OpenShift and Kubernetes Overview
+.. <<#section-1-a,▼>> Placeholder
+.. <<#section-1-b,▼>> Placeholder
+. <<#section-2,▼>> Load up a complete DevOps environment in Kubernetes using Ansible automation
+.. <<#section-2-a,▼>> Download/Install OpenShift Client Tools
+.. <<#section-2-b,▼>> Clone The Repositories
+.. <<#section-2-c,▼>> Log In To OpenShift
+.. <<#section-2-d,▼>> Deploy Using Ansible
+.. <<#section-2-e,▼>> Final Configurations
+. <<#section-3,▼>> Load our existing application code into this DevOps environment and wire it up to our GitHub repos
+. <<#section-4,▼>> Create a Vert.x microservice project to work with these existing services and communicate with each other
+.. <<#section-4-a,▼>> Set Up For Testing
+.. <<#section-4-b,▼>> Familiarize ourselves with some basic Vert.x concepts
+.. <<#section-4-c,▼>> Implement Vert.x Kubernetes Config
+.. <<#section-4-d,▼>> Implement clients for the noun and adjective services using OpenAPI specifications
+.. <<#section-4-e,▼>> Implement a REST API using OpenAPI 3 specifications and service proxies
+.. <<#section-4-f,▼>>Implement a new https://vertx.io/docs/vertx-service-proxy/java/[service proxy]
+.. <<#section-4-g,▼>>Implement a reactive Kafka system to stream "liked" insults
+.. <<#section-4-h,▼>>Generate JavaScript code to integrate our application into the UI
+.. <<#section-4-i,▼>>Implement circuit breakers to prevent poor user experience
+.. <<#section-4-j,▼>>Implement some BDD tests for our service
 . <<#section-4-b,▼>>Run our application code through the DevOps pipeline and resolve issues QUICKLY!
 . <<#section-5-b,▼>>Perform code quality analysis and unit/integration testing using SonarQube and HoverFly
 . <<#section-6-b,▼>>Analyze our web application for security vulnerabilities using OWASP Zed Attack Proxy
 . <<#section-7-b,▼>>Analyze our the library dependencies of our services to check for vulnerable libraries
 
 <<<
-=== [[section-1]] Load A Complete DevOps Environment In Kubernetes
+=== [[section-2]] Load A Complete DevOps Environment In Kubernetes
 
 [NOTE]
 ====
@@ -83,7 +86,7 @@ While some of the process we will show here is specific to OpenShift, all of the
 be achieved using https://github.com/kubernetes/helm[Helm] in stock Kubernetes (Without the nice UI)
 ====
 
-==== [[section-1-a]] Download/Install OpenShift Client Tools
+==== [[section-2-a]] Download/Install OpenShift Client Tools
 You can always download the latest OpenShift CLI tools from Github https://github.com/openshift/origin/releases[HERE]
 
 . Download the correct release for your platform
@@ -93,7 +96,7 @@ You can always download the latest OpenShift CLI tools from Github https://githu
 .. On *NIX systems, you can update your .<shell>rc files to add the location for `oc`
 .. On Windows systems, it is recommended to extract the archive into your *Documents* directory and add that folder to your PATH
 
-==== [[section-1-b]] Clone The Repositories
+==== [[section-2-b]] Clone The Repositories
 
 . Open the repository https://github.com/rhoar-qcon-2018/insult-service[HERE]
 . Fork each of the repository to your own GitHub account
@@ -123,7 +126,7 @@ You can always download the latest OpenShift CLI tools from Github https://githu
 . From your preferred git client:
 .. `git clone --recurse-submodules -j8 git@github.com:**YOUR_GITHUB_ACCOUNT_HERE**/rhoar-kubernetes-qcon-2018`
 
-==== [[section-1-c]] Log In To The OpenShift Cluster
+==== [[section-2-c]] Log In To The OpenShift Cluster
 
 [source, bash]
 ----
@@ -139,7 +142,7 @@ You have access to the following projects and can switch between them with 'oc p
   * my-project
 ----
 
-==== [[section-1-d]] Deploy The DevOps environment using Ansible
+==== [[section-2-d]] Deploy The DevOps environment using Ansible
 
 . Open a terminal which can execute Docker commands
 . Change directory to the location where you cloned the repositories
@@ -149,7 +152,7 @@ You have access to the following projects and can switch between them with 'oc p
 .. On *NIX, use `run.sh`
 . Wait a few minutes for the environment to finish provisioning
 
-==== [[section-1-e]] Final Configurations
+==== [[section-2-e]] Final Configurations
 
 . Log in to the Web Console for the cluster https://console.qcon2018.rhpds.redhat.com/[HERE]
 . Open your DevOps Environment labelled as `USERNAME-labs-ci-cd`
@@ -176,11 +179,11 @@ SonarQube account password: <BLANK>
 ====
 
 <<<
-=== [[section-2]]
+=== [[section-3]]
 
 
 <<<
-=== [[section-3]] Create a new Vert.x project
+=== [[section-4]] Create a new Vert.x project
 . Ensure that you have Apache Maven >= 3.3.9
 . From the `insult-service` directory, run the following command
 
@@ -263,7 +266,7 @@ from the initialization process, so we can put them in without versions as follo
 ----
 
 <<<
-=== [[section-3-a]] Set Up For Testing
+=== [[section-4-a]] Set Up For Testing
 
 Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. Personally,
 I prefer BDD style tests, so for this workshop I will be demonstrating 
@@ -369,7 +372,7 @@ run the Spock tests:
 ----
 
 <<<
-=== [[section-3-b]] Basic Vert.x Concepts
+=== [[section-4-b]] Basic Vert.x Concepts
 
 The https://vertx.io/docs/vertx-core/java/[Vert.x Core Documentation] is a really great reference to some of the basic
 concepts in Vert.x. We'll cover a few of these things here, but please feel free to go to the official docs for more
@@ -440,7 +443,7 @@ vertx.executeBlocking(future -> {
 });
 ----
 
-==== [[section-3-b-eventbus]] Event Bus
+==== [[section-4-b-eventbus]] Event Bus
 The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to 
 run single-threaded and potentially across multiple threads/cores in parallel, we need a safe way to share data which
 will not cause race conditions or concurrency problems. To facilitate this, Vert.x has an Event Bus through which we
@@ -465,7 +468,7 @@ vertx.timerStream(300)
 ----
 
 <<<
-=== [[section-3-c]] Implement Kubernetes Config
+=== [[section-4-c]] Implement Kubernetes Config
 Following one of the tenets of https://12factor.net/config[12 Factor Applications], we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
 by providing a comprehensive set of APIs for loading the application's configuration. In our case, since we are
@@ -628,7 +631,7 @@ time and resources for little gain. You should, however, aim to cover all critic
 <<<
 === Implement a new https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first 
-<<#section-3-b-eventbus,example>> of sending and receiving on the event bus, we used a producer and a consumer based on
+<<#section-4-b-eventbus,example>> of sending and receiving on the event bus, we used a producer and a consumer based on
 rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer
 experience. Instead, we can use Vert.x Service Proxies to provide an easier way to implement business logic
 and then expose that business logic on the event bus in a more consumable manner.

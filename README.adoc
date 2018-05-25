@@ -98,9 +98,9 @@ You can always download the latest OpenShift CLI tools from Github https://githu
 
 ==== [[section-2-b]] Clone The Repositories
 
-. Open the repository https://github.com/rhoar-qcon-2018/insult-service[HERE]
+. Open the `insult-service` repository https://github.com/rhoar-qcon-2018/insult-service[HERE]
 . Fork the repository to your own GitHub account
-. Open the repository https://github.com/rhoar-qcon-2018/rhoar-kubernetes-qcon-2018[HERE]
+. Open the `rhoar-kubernetes-qcon-2018` repository https://github.com/rhoar-qcon-2018/rhoar-kubernetes-qcon-2018[HERE]
 . Fork the repository to your own GitHub account
 . In your fork of the `rhoar-kubernetes-qcon-2018` repository, edit the file `.gitmodules` to update the Git URL for the `insult-service` to point to your own fork
 +

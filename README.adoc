@@ -1327,7 +1327,112 @@ on the event bus matches the address on the service which binds that address. If
 addresses do not match, you will be sending messages into an unused message queue.
 ====
 
+[NOTE]
+====
+When compiling Service Proxy code, the code generator will generate client code in
+every currently supported language library currently on the classpath. This means that
+if your have `vertx-lang-js`, you will get client interfaces in JavaScript and Typescript.
+If you have `vertx-rx-java-2`, you will get Rx'ified versions of your service proxy.
+Adding `vertx-lang-scala` will generate the library in Scala and so on. This is a
+supremely powerful feature for integration and API sharing.
+====
+
 <<<
-=== Implement REST API
-==== TODO: Using OpenAPI 3 Spec file to create REST API in Vert.x
+== [[section-5]] Implement REST API
+
+=== [[section-5-a]] Using OpenAPI 3 Spec file to create REST API in Vert.x
+
+In order to use the OpenAPI Router Factory in Vert.x we must first create a new API
+specification using OpenAPI v3. For our Insult service, we will write a simple REST
+API specification using YAML.
+
+.src/main/resources/insult-api-spec.yaml
+[source,yaml,subs=attributes+]
+----
+openapi: 3.0.0
+info:
+  version: "1.0.5"
+  title: 'Insult Service'
+  description: 'API for Elizabethan Insult Generator Microservices'
+# Added by API Auto Mocking Plugin
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/InfoSec812/Insult/1
+tags:
+  - name: insult
+    description: An Elizabethan derrogatory insult
+paths:
+  /health:
+    get:
+      summary: Get the health of the service
+      description: >
+        Returns an HTTP response code and a JSON document detailing the current
+        health status of the service
+      operationId: health
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/health'
+        '500':
+          description: 'Server error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/health'
+  /insult:
+    get:
+      tags:
+        - insult
+      summary: Get an Insult
+      description: ''
+      operationId: getInsult
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/insult'
+components:
+  schemas:
+    health:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+        details:
+          type: string
+        error:
+          type: string
+    insult:
+      type: object
+      required:
+      - noun
+      - adj1
+      - adj2
+      properties:
+        noun:
+          type: string
+        adj1:
+          type: string
+        adj2:
+          type: string
+        name:
+          type: string
+----
+
+[NOTE]
+====
+The YAML itself is only somewhat helpful for understanding the API. It is VERY useful
+to visualize the Spec in https://editor.swagger.io/[Swagger Editor]. It is highly
+recommended that you paste the code above into that editor to view the API specification.
+====
+
+<<<
+=== [[section-5-b]] Adding The OpenAPI Router Factory To The MainVerticle
 

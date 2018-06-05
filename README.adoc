@@ -1296,7 +1296,7 @@ public class InsultServiceImpl implements InsultService {
 
 
     /**
-     * The the {@link KafkaService} event bus proxy to make calls to the
+     * Use the {@link KafkaService} event bus proxy to make calls to the
      * Kafka microservice
      * @param insult An insult made up of 2 adjectives and a noun
      * @param handler A handler to be called

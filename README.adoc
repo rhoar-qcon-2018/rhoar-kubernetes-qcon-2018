@@ -6,6 +6,8 @@ ifndef::icons[:conum-guard-groovy: // //]
 :icons: font
 :pdf-page-size: Letter
 :source-highlighter: rouge
+:rouge-theme: github
+:rouge-style: github
 :doctype: book
 Deven Phillips, Jeremy Davis, Ram Maddali
 v1.0, 2018-05-22
@@ -35,13 +37,15 @@ to build, test, deploy, and validate microservices quickly and reliably.
 
 Some of the tools we will leverage in this workshop are listed below:
 
+* http://vertx.io/[Vert.x] - A toolkit for developing reactive applications on the JVM
 * https://kubernetes.io/[Kubernetes] (In the form of OpenShift Container Platform 3.9)
+* http://infinispan.org/[Infinispan] A distributed in-memory key/value data store
+* http://jgroups.org/[JGroups] In conjunction with Infinispan, a cluster discovery system for Vert.x
 * https://jenkins.io/[Jenkins] (For continuous integration and continuous delivery)
 * https://www.sonarqube.org/[SonarQube] (For code quality analysis)
 * https://www.sonatype.com/nexus-repository-sonatype[Sonatype Nexus] (For an artifact repository)
 * https://www.owasp.org/index.php/OWASP_Zed_Attack_Proxy_Project[OWASP Zed Attack Proxy] (For security analysis of web applications)
 * https://www.owasp.org/index.php/OWASP_Dependency_Check[OWASP Dependency Check]
-* http://vertx.io/[Vert.x] - A toolkit for developing reactive applications on the JVM
 * http://openjdk.org/[Java] - A modern and high-performance programming language
 * http://spockframework.org/spock/docs/1.1/index.html[Spock Framework] A testing and specification framework for Java and Groovy applications
 * https://nodejs.org/[Node.js] - A programming language well suited to quickly develop applications
@@ -65,13 +69,14 @@ Some of the tools we will leverage in this workshop are listed below:
 .. <<#section-4-a,▼>> Set Up For Testing
 .. <<#section-4-b,▼>> Familiarize ourselves with some basic Vert.x concepts
 .. <<#section-4-c,▼>> Implement Vert.x Kubernetes Config
-.. <<#section-4-d,▼>> Implement clients for the noun and adjective services using OpenAPI specifications
-.. <<#section-4-e,▼>> Implement a REST API using OpenAPI 3 specifications and service proxies
-.. <<#section-4-f,▼>>Implement a new https://vertx.io/docs/vertx-service-proxy/java/[service proxy]
-.. <<#section-4-g,▼>>Implement a reactive Kafka system to stream "liked" insults
-.. <<#section-4-h,▼>>Generate JavaScript code to integrate our application into the UI
-.. <<#section-4-i,▼>>Implement circuit breakers to prevent poor user experience
-.. <<#section-4-j,▼>>Implement some BDD tests for our service
+.. <<#section-4-d,▼>> Configure Vert.x Clustering With Infinispan/JGroups
+.. <<#section-4-e,▼>> Implement clients for the noun and adjective services using OpenAPI specifications
+.. <<#section-4-f,▼>> Implement a REST API using OpenAPI 3 specifications and service proxies
+.. <<#section-4-g,▼>>Implement a new https://vertx.io/docs/vertx-service-proxy/java/[service proxy]
+.. <<#section-4-h,▼>>Implement a reactive Kafka system to stream "liked" insults
+.. <<#section-4-i,▼>>Generate JavaScript code to integrate our application into the UI
+.. <<#section-4-j,▼>>Implement circuit breakers to prevent poor user experience
+.. <<#section-4-k,▼>>Implement some BDD tests for our service
 . <<#section-4-b,▼>>Run our application code through the DevOps pipeline and resolve issues QUICKLY!
 . <<#section-5-b,▼>>Perform code quality analysis and unit/integration testing using SonarQube and HoverFly
 . <<#section-6-b,▼>>Analyze our web application for security vulnerabilities using OWASP Zed Attack Proxy
@@ -202,8 +207,8 @@ $ mvn io.fabric8:vertx-maven-plugin:1.0.13:setup -DvertxVersion=3.5.1
 Set the project groupId [io.vertx.example]: com.redhat.qcon
 Set the project artifactId [my-vertx-project]: insult-service
 Set the project version [1.0-SNAPSHOT]: 1.0.0-SNAPSHOT
-Set the vertcile class name [com.redhat.qcon.MainVerticle]: 
-[INFO] Creating verticle com.redhat.qcon.MainVerticle
+Set the vertcile class name [MainVerticle]:
+[INFO] Creating verticle MainVerticle
 [INFO] Creating directory /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service/src/main/java/com/redhat/qcon
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
@@ -269,7 +274,7 @@ from the initialization process, so we can put them in without versions as follo
 === [[section-4-a]] Set Up For Testing
 
 Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. Personally,
-I prefer BDD style tests, so for this workshop I will be demonstrating 
+I prefer BDD style tests, so for this workshop I will be demonstrating
 http://spockframework.org/spock/docs/1.1/index.html[SpockFramework]. To use Spock, we will need to
 add some additional dependencies to our POM:
 
@@ -300,7 +305,7 @@ add some additional dependencies to our POM:
     <version>1.7.5</version>
     <scope>test</scope>
 </dependency>
-<dependency> <!-- enables mocking of classes without default constructor (together with CGLIB) -->
+<dependency> <!-- enables mocking of classes without default constructor -->
     <groupId>org.objenesis</groupId>
     <artifactId>objenesis</artifactId>
     <version>2.6</version>
@@ -336,7 +341,7 @@ run the Spock tests:
                 </execution>
             </executions>
         </plugin>
-        <plugin>    <!-- Configure the Maven SureFire plugin to use Groovy Spec files for test -->
+        <plugin> <!-- Configure the Maven SureFire to use Groovy Spec files for test -->
             <artifactId>maven-surefire-plugin</artifactId>
             <version>2.6</version>
             <configuration>
@@ -346,7 +351,7 @@ run the Spock tests:
                 </includes>
             </configuration>
         </plugin>
-        <plugin>    <!-- Configure JaCoCo to be able to extract code coverage information -->
+        <plugin> <!-- Configure JaCoCo to be able to extract code coverage information -->
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
             <version>0.7.6.201602180812</version>
@@ -390,7 +395,7 @@ vertx.eventBus()
      .subscribe(this::messageHandler);
 ----
 
-Another core concept of Vert.x is that everything which is done in a Verticle should be done in a non-blocking way. 
+Another core concept of Vert.x is that everything which is done in a Verticle should be done in a non-blocking way.
 To support this, Vert.x provides non-blocking implementations of many common functionalities such as:
 
 * File I/O
@@ -402,10 +407,10 @@ To support this, Vert.x provides non-blocking implementations of many common fun
 * Metrics
 
 ==== Verticles
-From the new project we generated via Maven, we can see that a class called `MainVerticle` was created. 
+From the new project we generated via Maven, we can see that a class called `MainVerticle` was created.
 https://vertx.io/docs/vertx-core/java/#_verticles[Verticles] are the basic unit of an application in Vert.x. By default,
-Verticles are run single-threaded on an event loop (Reactor Pattern). The one difference between this and other Reactor 
-Pattern implementations you may have seen before is that Vert.x runs MULTIPLE event loops in parallel, calling it 
+Verticles are run single-threaded on an event loop (Reactor Pattern). The one difference between this and other Reactor
+Pattern implementations you may have seen before is that Vert.x runs MULTIPLE event loops in parallel, calling it
 https://vertx.io/docs/vertx-core/java/#_reactor_and_multi_reactor[Multi-Reactor].
 
 The basic contents of a Vertical are a class definition and a `start` method, as shown here:
@@ -444,7 +449,7 @@ vertx.executeBlocking(future -> {
 ----
 
 ==== [[section-4-b-eventbus]] Event Bus
-The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to 
+The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to
 run single-threaded and potentially across multiple threads/cores in parallel, we need a safe way to share data which
 will not cause race conditions or concurrency problems. To facilitate this, Vert.x has an Event Bus through which we
 can send/receive messages between Verticles. A simple example of using the event bus might look like:
@@ -472,7 +477,7 @@ vertx.timerStream(300)
 Following one of the tenets of https://12factor.net/config[12 Factor Applications], we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
 by providing a comprehensive set of APIs for loading the application's configuration. In our case, since we are
-deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration. 
+deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration.
 
 Another best practice is that we should practice "test first" development. To further that concept, let's start
 by writing a failing test for the feature we intent to implement.
@@ -490,27 +495,28 @@ import spock.util.concurrent.AsyncConditions
 class MainVerticleSpec extends Specification {
 
     def 'Test Vert.x configuration loading'() {
-        given: 'An instance of Vert.x'  {conum-guard-groovy} <1>
+        given: 'An instance of Vert.x'                          {conum-guard-groovy} <1>
             def vertx = Vertx.vertx()
-        and: 'An instance of a Vert.x Future'  {conum-guard-groovy} <2>
+        and: 'An instance of a Vert.x Future'                   {conum-guard-groovy} <2>
             def fut = Future.future()
-        and: '''An instance of Spock's AsyncConditions''' {conum-guard-groovy} <3>
+        and: '''An instance of Spock's AsyncConditions'''       {conum-guard-groovy} <3>
             def async = new AsyncConditions(1)
 
-        when: 'We attempt to deploy the main Verticle'  {conum-guard-groovy} <4>
+        when: 'We attempt to deploy the main Verticle'          {conum-guard-groovy} <4>
             vertx.deployVerticle(new MainVerticle(), fut.completer())
 
         then: 'Expect that the correct configuration is found and loaded'
             fut.setHandler({ res ->
-                async.evaluate { {conum-guard-groovy} <5>
-                    res.succeeded() {conum-guard-groovy} <6>
-                    vertx.getOrCreateContext().config().hasProperty('noun') {conum-guard-groovy} <7>
-                    vertx.getOrCreateContext().config().hasProperty('adjective') {conum-guard-groovy} <8>
-                    vertx.getOrCreateContext().config().hasProperty('http') {conum-guard-groovy} <9>
+                async.evaluate {                                {conum-guard-groovy} <5>
+                    res.succeeded()                             {conum-guard-groovy} <6>
+                    def config = vertx.getOrCreateContext().config()
+                    config.hasProperty('noun')                  {conum-guard-groovy} <7>
+                    config.hasProperty('adjective')             {conum-guard-groovy} <8>
+                    config.hasProperty('http')                  {conum-guard-groovy} <9>
                 }
             })
 
-        cleanup: 'Await the async operations'  {conum-guard-groovy} <10>
+        cleanup: 'Await the async operations'                   {conum-guard-groovy} <10>
             async.await(10)
     }
 }
@@ -558,14 +564,16 @@ public class MainVerticle extends AbstractVerticle {
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "insult_default_config.json"));
 
-        // Load container specific configuration from a specific file path inside of the container
+        // Load container specific configuration from a specific file path inside of the
+        // container
         ConfigStoreOptions localConfig = new ConfigStoreOptions()               {conum-guard-groovy} <3>
                 .setType("file")
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "/opt/docker_config.json"))
                 .setOptional(true);
 
-        // When running inside of Kubernetes, configure the application to also load from a ConfigMap
+        // When running inside of Kubernetes, configure the application to also load from
+        // a ConfigMap
         ConfigStoreOptions confOpts = new ConfigStoreOptions()                  {conum-guard-groovy} <4>
                 .setType("configmap")
                 .setConfig(new JsonObject()
@@ -608,7 +616,7 @@ public class MainVerticle extends AbstractVerticle {
 <10> Complete the `startFuture` successfully
 
 This example replaces the generic Verticle type with one which has been refactored to use
-Reactive Extensions. Most of the rest of this Workshop with rely on using ReactiveX for 
+Reactive Extensions. Most of the rest of this Workshop with rely on using ReactiveX for
 our Vert.x code.
 
 [IMPORTANT]
@@ -629,21 +637,112 @@ time and resources for little gain. You should, however, aim to cover all critic
 ====
 
 <<<
-=== Implement a new https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
-Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first 
+=== [[section-4-d]] Configure Vert.x Clustering With Infinispan/JGroups
+A really impressive feature we can use in Vert.x is it's low-level support for clustering and distributed processing
+using the Event Bus. Vert.x supports a few different cluster manager implementations like
+https://vertx.io/docs/vertx-hazelcast/java[Hazelcast], https://vertx.io/docs/vertx-infinispan/java[Infinispan],
+https://vertx.io/docs/vertx-ignite/java[Apache Ignite], and https://vertx.io/docs/vertx-zookeeper/java[Apache Zookeeper].
+Each of these has different use cases, but all accomplish the same goal: Vert.x instances can discover one-another and
+then form a mesh-network over the event bus. Once a cluster is formed, the features available include:
+
+* Discovery and group membership of Vert.x nodes in a cluster
+* Maintaining cluster wide topic subscriber lists (so we know which nodes are interested in which event bus addresses)
+* Distributed Map support
+* Distributed Locks
+* Distributed Counters
+
+These features are used in some of Vert.x's other features for things like distributed session management for web
+applications.
+
+
+==== [[section-4-d-1]] Add Clustering Dependencies
+For this workshop, since we are using Kubernetes, we will use the Infinispan Cluster Manager by adding the following
+dependency
+
+.pom.xml Snippet
+[source,xml]
+----
+    <dependencies>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-infinispan</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.infinispan</groupId>
+          <artifactId>infinispan-cloud</artifactId>
+          <version>9.1.3.Final</version>
+        </dependency>
+        <dependency>
+          <groupId>org.jgroups.kubernetes</groupId>
+          <artifactId>jgroups-kubernetes</artifactId>
+          <version>1.0.3.Final</version>
+        </dependency>
+        ...SNIP...
+----
+
+
+When running locally, we can just add `--cluster` to the execution of the fat-jar and Infinispan+JGroups will automatically
+discover other Vert.x nodes on the same network segment via Multicast DNS (MCAST_PING).
+
+==== [[section-4-d-2]] Clustering Inside Kubernetes/OpenShift
+When running inside of Kubernetes or OpenShift, we change the config with the system property
+`-Dvertx.jgroups.config=default-configs/default-jgroups-kubernetes.xml`.
+
+In our deployment environment, we need to set the `default` service account to have `view` role inside of the
+namespace and also set the `KUBERNETES_NAMESPACE` environment variable. With these changes in place, the Vert.x Pods
+will automatically discover one another using the Kubernetes API.
+
+
+==== [[section-4-d-3]] Benefits Of Vert.x Clustering
+This means that event bus messages can be sent and received across all Vert.x instances. This makes it possible to:
+
+* Distribute capabilities to different microservices in a reactive manner
+* Scale microservices independently
+* Coordinate across microservices using distributed counters and locks
+* Provide a simple API for service communications without the overhead of REST (see https://vertx.io/docs/vertx-service-proxy/java/[Service Proxies])
+
+[NOTE]
+====
+If you are using an OpenShift cluster which has Multi-tenant networking and UDP multicast enabled, you can skip the
+Kubernetes specific config as the cluster will allow Multicast DNS discovery inside of each Namespace just fine.
+====
+
+<<<
+=== [[section-4-e]] Implement a new https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
+Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first
 <<#section-4-b-eventbus,example>> of sending and receiving on the event bus, we used a producer and a consumer based on
 rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer
 experience. Instead, we can use Vert.x Service Proxies to provide an easier way to implement business logic
-and then expose that business logic on the event bus in a more consumable manner.
+and then expose that business logic on the event bus in a more consumable manner. These Service Proxy implementations
+can also be used in a clustered Vert.x environment to allow us to have simple interactions between services across
+multiple microservices. For our workshop, we will be integrating with a few other microservices which provide the Nouns
+and Adjectives for our insults. The Noun service is implemented in NodeJS, while the Adjective service is implemented
+using Spring Boot.
 
-==== The Interface
-All service proxies start with an Interface definition which looks something like this:
+==== [[section-4-e-1]] Prepare For The Code Generator
 
-.src/main/java/com/redhat/qcon/services/NounService.java
+In order for the Vert.x code generation to work, we need to annotate the package which will contain the code to be
+processed. We do this by creating a `package-info.java` file. You should place this file deep enough in the heirarchy
+that will prevent most of the code from being considered, but high enough that you can process all required code:
+
+.src/main/java/com/redhat/qcon/services/package-info.java
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.services.noun;
+@ModuleGen(name = "insult", groupPackage = "com.redhat.qcon.insult.services")
+package com.redhat.qcon.insult.services;
 
+import io.vertx.codegen.annotations.ModuleGen;
+----
+
+==== [[section-4-e-2]] The Interface
+All service proxies start with an Interface definition which looks something like this:
+
+.src/main/java/com/redhat/qcon/services/insult/InsultService.java
+[source,java,subs=attributes+]
+----
+package com.redhat.qcon.insult.services.insult;
+
+import io.vertx.codegen.annotations.Fluent;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
@@ -653,24 +752,32 @@ import io.vertx.core.json.JsonObject;
 
 @ProxyGen
 @VertxGen
-public interface NounService {
+public interface InsultService {
 
-    static NounService create(Vertx vertx) {
-        return new NounServiceImpl(vertx);
+    static InsultService create(Vertx vertx) {
+        return new InsultServiceImpl(vertx, vertx.getOrCreateContext().config());
     }
 
-    static NounService createProxy(Vertx vertx, String address) {
-        return new NounServiceVertxEBProxy(vertx, address);
+    static InsultService createProxy(Vertx vertx, String address) {
+        return new InsultServiceVertxEBProxy(vertx, address);
     }
 
     // Business logic methods here!!
 
-    void get(Handler<AsyncResult<JsonObject>> nounGetHandler);
+    /**
+     * Retrieve an insult from the child services and build the insult payload
+     * @param insultGetHandler A {@link Handler} callback for the results
+     */
+    void getREST(Handler<AsyncResult<JsonObject>> insultGetHandler);
 
-    void save(String noun, Handler<AsyncResult<JsonObject>> nounSaveHandler);
-
+    /**
+     * Publish a "liked" insult to the Kafka queue to be distributed to all of the other
+     * clusters
+     * @param insult An insult made up of 2 adjectives and a noun
+     * @param insultPublishHandler A {@link Handler} callback for the results
+     */
     @Fluent
-    NounService healthCheck(Handler<AsyncResult<Boolean>> nounHealthCheckHandler);
+    InsultService publish(JsonObject insult, Handler<AsyncResult<Void>> insultPublishHandler);
 }
 ----
 
@@ -680,76 +787,456 @@ by the underlying runtime to provide a simple means of wiring up the service pro
 
 [NOTE]
 ====
-The business logic methods do not have an access modifier set (e.g. public/private/protected). This means that it
+The business logic methods do not have an access modifier set (e.g. `public`/`private`/`protected`). This means that it
 defaults to *_package private_*. By doing this, when we implement unit/BDD tests with Spock we can call those methods
-directly.
+directly in order to facilitate simplified testing.
 ====
 
-Now that we have an interface, we need to create a series of tests for that code:
+==== [[section-4-e-3]] Test First Development
 
-.src/test/groovy/com/redhat/qcon/services/NounServiceImplSpec.groovy
+When we use the philosophy of _test first_ development, we expect to follow the pattern of:
+
+* [big red]#RED#
+* [big green]#GREEN#
+* [big yellow]#REFACTOR#
+
+This means that we write a test before we write any code and expect it to fail ([red]#red#). We then write code until
+the test passes ([green]#green#). Finally, we plan for any refactoring and start the loop over again.
+
+[NOTE]
+====
+Using a tool like https://infinitest.github.io/[Infinitest] can be VERY useful to improve your development iterations.
+Infinitest _watches_ for changes in your source code and constantly re-runs the appropriate tests when a file changes.
+====
+
+Now that we have an interface, we need to create a series of tests for that code. As mentioned at the start, we will be
+using http://spockframework.org/spock/docs/1.1/index.html[Spock Framework] in order to write BDD style _Specifications_.
+Spock Specifications are quite easy to write and lend themselves to readability. We start off with a Groovy class which
+extends `Specification`.
+
+.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
 [source,java,subs=attributes+]
 ----
+package com.redhat.qcon.insult.services.insult
 
+import spock.lang.Specification
+
+class InsultServiceImplSpec extends Specification {
+
+}
 ----
 
-.src/main/java/com/redhat/qcon/services/noun/NounService.java
+That's the extend of the boilerplate required for writing tests. Spock also supports pre-operations like:
+
+* `setup()` - A method run before EACH TEST
+* `setupSpec()` - A method run before the entire test class
+* `cleanup()` - A method run after EACH TEST
+* `cleanupSpec()` - A method run after ALL of the tests in the class are complete
+
+Any resources which you would want to re-use across tests will need to be defined at the class scope and annotated as
+`@Shared`, otherwise Spock will prevent the tests from running. This is to ensure that you don't accidentally re-use
+state without being explicit. `static final` field are acceptable too.
+
+.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.services.noun;
+package com.redhat.qcon.insult.services.insult
+
+import spock.lang.Specification
+import io.specto.hoverfly.junit.core.Hoverfly
+import io.specto.hoverfly.junit.core.SimulationSource
+import spock.lang.Shared
+import io.vertx.core.json.JsonObject
+import io.vertx.core.Vertx
+
+class InsultServiceImplSpec extends Specification {
+
+    @Shared
+    Hoverfly hoverfly
+
+    @Shared
+    Vertx vertx
+
+    @Shared
+    JsonObject proxyOptions
+
+    static final String NOUN_RESPONSE_BODY_ONE =
+                                new JsonObject().put('noun', 'noun').encodePrettily()
+    static final String ADJ_RESPONSE_BODY_ONE =
+                                new JsonObject().put('adj', 'adjective').encodePrettily()
+}
+----
+
+You will notice that we have defined a `Hoverfly` instance, and we will use this in our tests to simulate the dependent
+services which this service will interact with. Hoverfly implements an HTTP proxy which can intercept _simulated_
+interactions with an external service. We will use this to simulate both successful and failed responses from the
+other microservices so that we can easily test in isolation.
+
+To implement the simuations in Hoverfly, we use the
+http://hoverfly.readthedocs.io/projects/hoverfly-java/en/latest/pages/corefunctionality/dsl.html[Hoverfly DSL] to
+define a `SimulationSource`.
+
+.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
+[source,java,subs=attributes+]
+----
+    // -- SNIP --
+
+    static final String NOUN_RESPONSE_BODY_ONE =
+                            new JsonObject().put('noun', 'noun').encodePrettily()
+    static final String ADJ_RESPONSE_BODY_ONE =
+                            new JsonObject().put('adj', 'adjective').encodePrettily()
+
+    static final SimulationSource GET_RESPONSE_ONE = dsl(                       {conum-guard-groovy} <1>
+            service('localhost')
+                    .get("/api/v1/noun")
+                    .willReturn(success(NOUN_RESPONSE_BODY_ONE,
+                                        APPLICATION_JSON.toString())),
+            service('localhost')
+                    .get("/api/v1/adjective")
+                    .willReturn(success(ADJ_RESPONSE_BODY_ONE,
+                                        APPLICATION_JSON.toString())))
+
+    static final SimulationSource GET_RESPONSE_TWO = dsl(                       {conum-guard-groovy} <2>
+            service('localhost')
+                    .get("/api/v1/noun")
+                    .willReturn(serverError()))
+
+    static final SimulationSource GET_RESPONSE_THREE = dsl(                     {conum-guard-groovy} <3>
+            service('localhost')
+                    .andDelay(10, TimeUnit.SECONDS).forAll(),
+            service('localhost')
+                    .get('/api/v1/noun')
+                    .willReturn(success(NOUN_RESPONSE_BODY_ONE,
+                                        APPLICATION_JSON.toString())),
+            service('localhost')
+                    .get("/api/v1/adjective")
+                    .willReturn(success(ADJ_RESPONSE_BODY_ONE,
+                                        APPLICATION_JSON.toString())))
+
+    def setupSpec() {                                                           {conum-guard-groovy} <4>
+        System.setProperty('org.slf4j.simpleLogger.defaultLogLevel', 'debug')
+        def hoverflyConfig = localConfigs().proxyLocalHost().captureAllHeaders()
+        hoverfly = new Hoverfly(hoverflyConfig, SIMULATE)
+        hoverfly.start()
+        proxyOptions = new JsonObject()
+                .put('host', 'localhost')
+                .put('port', hoverfly.hoverflyConfig.proxyPort)
+                .put('type', 'HTTP')
+        vertx = Vertx.vertx()                                                   {conum-guard-groovy} <5>
+    }
+
+    def setup() {
+        hoverfly.resetJournal()                                                 {conum-guard-groovy} <6>
+    }
+
+    // -- SNIP --
+----
+<1> The first simulation is the happy path where a good response is send by both services
+<2> The second simulation has the noun service return a 5XX error
+<3> The third simulation returns a 2XX response, but after a delay (This will be used later to test circuit breakers)
+<4> In the `setupSpec()` method, we instantiate the Hoverfly proxy service and extract the proxy settings
+<5> Finally, we create a new `Vertx` instance within which we will run all of our specifications
+<6> In the `setup()` method, we ensure that the state of Hoverfly is reset before each test specification
+
+==== [[section-4-e-4]] Creating The Service Implementation
+
+We can now create a class which implements our interface. We have left the service implementation class as a stub so
+that we can delve deeper into HTTP clients in the next section.
+
+.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+[source,java,subs=attributes+]
+----
+package com.redhat.qcon.insult.services.insult;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.reactivex.core.Vertx;
+import static java.lang.String.format;
 
-public class NounServiceImpl implements NounService {
+public class InsultServiceImpl implements InsultService {
 
-    Vertx vertx;
-
-    public NounServiceImpl(Vertx vertx) {
-        this.vertx = vertx;
+    /**
+     * Request adjectives and a noun from the other microservices
+     * @param insultGetHandler A {@link Handler} callback for the results
+     */
+    @Override
+    public void getREST(Handler<AsyncResult<JsonObject>> insultGetHandler) {
+        throw new Exception("Not Implemented");
     }
 
+    /**
+     * The the {@link KafkaService} event bus proxy to make calls to the Kafka
+     * microservice
+     * @param insult An insult made up of 2 adjectives and a noun
+     * @param handler A handler to be called
+     */
     @Override
-    public void get(Handler<AsyncResult<JsonObject>> nounGetHandler) {
-
-    }
-
-    @Override
-    public void save(String noun, Handler<AsyncResult<JsonObject>> nounSaveHandler) {
-
-    }
-
-    @Override
-    public NounService healthCheck(Handler<AsyncResult<Boolean>> nounHealthCheckHandler) {
-        return this;
+    public InsultService publish(JsonObject insult, Handler<AsyncResult<Void>> handler) {
+        throw new Exception("Not Implemented");
     }
 }
 ----
 
-And finally, we must create a `package-info.java` file annotated with `@ModuleGen` in order for the
-Vert.x annotation processor to work.
+<<<
+=== [[section-4-f]] Implement REST clients
+Vert.x provides both a high-level and low-level method of interacting with HTTP servers. In the core Vert.x package,
+there is `vertx.createHttpClient()`, and it allows for very customizable handling of making requests to HTTP servers.
+For more simple interactions with HTTP servers, the Vert.x team provides the `vertx-web-client` library. For interacting
+with the other microservices via REST, we will use the web client. The simple case of using the web client is
+demonstrated below:
 
+.Web Client Example
 [source,java,subs=attributes+]
 ----
-@ModuleGen(name = "insult", groupPackage = "com.redhat.qcon.services")
-package com.redhat.qcon;
+WebClientOptions opts = new WebClientOptions()
+                                .setLogActivity(true)
+                                .setDefaultHost("localhost")
+                                .setDefaultPort(8080)
+                                .setProxyOptions(proxyOptions);
+WebClient client = WebClient.create(vertx, opts);
 
-import io.vertx.codegen.annotations.ModuleGen;
+client.get("/some/path")
+        .timeout(3000)
+        .rxSend()
+        .map(resp -> {                        // Map 4XX and 5XX responses to Exceptions
+            if (resp.statusCode()>=400) {
+                throw new HttpResponseException(resp.statusCode(), resp.statusMessage());
+            }
+            return resp;
+        })
+        .map(HttpResponse::bodyAsJsonObject)
+        .doOnError(e -> {
+            // Handle exceptions
+        })
+        .subscribe(json -> {
+            // Handle successful JSON response body
+        });
 ----
 
-We have left the service implementation class as a stub so that we can delve deeper into HTTP clients
-in the next section.
+This is pretty concise code, but it is not terribly readable. The in-line lambdas are also difficult to test in
+isolation. Instead, we can extract those into void stateless methods which are simple to test and read.
 
-<<<
-=== Implement REST clients
-Vert.x recently introduced significant support for the https://www.openapis.org/[OpenAPI v3 Specification] language. 
-OpenAPI 3 allows us to describe a REST API using YAML or JSON. From those specifications, we can create both server
-and client implementations for the REST API. We will use this facility in Vert.x to create REST API clients for the
-Noun and Adjective services which were previously implemented using NodeJS and Spring Boot. Here's how:
+.Web Client Example
+[source,java,subs=attributes+]
+----
+private HttpResponse<Buffer> mapErrors(HttpResponse<Buffer> resp)
+                                                        throws HttpResponseException {
+    // Map 4XX and 5XX responses to Exceptions
+    if (resp.statusCode()>=400) {
+        throw new HttpResponseException(resp.statusCode(), resp.statusMessage());
+    }
+    return resp;
+}
 
-1. Create a new class 
+private void example(Future<JsonObject> httpResponse) {
+    WebClientOptions opts = new WebClientOptions()
+                                    .setLogActivity(true)
+                                    .setDefaultHost("localhost")
+                                    .setDefaultPort(8080)
+                                    .setProxyOptions(proxyOptions);
+    WebClient client = WebClient.create(vertx, opts);
+
+    client.get("/some/path")
+            .timeout(3000)
+            .rxSend()
+            .map(this::mapErrors)
+            .map(HttpResponse::bodyAsJsonObject)
+            .doOnError(httpResponse::fail)
+            .subscribe(httpResponse::complete);
+}
+----
+
+This code is simple to test and easier to read. As we go forward, this is the pattern I will advocate. Now, let's
+implement some methods so that we can make requests to our associated microservices and retrieve the results.
+
+.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+[source,java,subs=attributes+]
+----
+package com.redhat.qcon.insult.services.insult;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
+import io.vertx.reactivex.core.Vertx;
+import static java.lang.String.format;
+import io.vertx.reactivex.core.Future;
+
+public class InsultServiceImpl implements InsultService {
+
+    Vertx vertx;
+    WebClient nounClient, adjClient;
+
+    /**
+     * Default constructor
+     * @param vertx The Vert.x instance to be used
+     * @param config The {@link JsonObject} configuration for this service
+     */
+    public InsultServiceImpl(io.vertx.core.Vertx vertx, JsonObject config) {
+
+        kafka = KafkaService.createProxy(Vertx.newInstance(vertx), "kafka.service");
+
+        JsonObject nounConfig = config.getJsonObject("noun");
+        JsonObject adjConfig = config.getJsonObject("adjective");
+        this.vertx = Vertx.newInstance(vertx);
+        WebClientOptions nounClientOpts = new WebClientOptions(nounConfig)
+                .setLogActivity(true);
+        WebClientOptions adjClientOpts = new WebClientOptions(adjConfig)
+                .setLogActivity(true);
+        nounClient = WebClient.create(this.vertx, nounClientOpts);
+        adjClient = WebClient.create(this.vertx, adjClientOpts);
+    }
+
+    /**
+     * Request adjectives and a noun from the other microservices
+     * @param insultGetHandler A {@link Handler} callback for the results
+     */
+    @Override
+    public void getREST(Handler<AsyncResult<JsonObject>> insultGetHandler) {
+        throw new Exception("Not Implemented");
+    }
+
+    /**
+     * The the {@link KafkaService} event bus proxy to make calls to the
+     * Kafka microservice
+     * @param insult An insult made up of 2 adjectives and a noun
+     * @param handler A handler to be called
+     */
+    @Override
+    public InsultService publish(JsonObject insult, Handler<AsyncResult<Void>> handler) {
+        throw new Exception("Not Implemented");
+    }
+
+    /**
+     * Maps HTTP error status codes to exceptions to interrupt the RxJava stream
+     * processing and trigger an error handler
+     * @param r The {@link HttpResponse} to be checked
+     * @return The same as the input if the response code is 2XX
+     * @throws Exception If the {@link HttpResponse} code is 4XX or 5XX
+     */
+    private static final HttpResponse<Buffer> mapStatusToError(HttpResponse<Buffer> r)
+                                                                        throws Exception {
+        if (r.statusCode()>=400) {
+            throw new Exception(format("%d: %s\n%s", r.statusCode(),
+                                r.statusMessage(), r.bodyAsString()));
+        } else {
+            return r;
+        }
+    }
+
+    /**
+     * Requests a noun from the appropriate microservice and returns a future with the
+     * result
+     * @return A {@link Future} of type {@link JsonObject} which will contain a noun on
+     *         success
+     */
+    Future<JsonObject> getNoun() {
+        Future<JsonObject> fut = Future.future();
+        nounClient.get("/api/v1/noun")
+                .timeout(3000)
+                .rxSend()
+                .map(InsultServiceImpl::mapStatusToError)
+                .map(HttpResponse::bodyAsJsonObject)
+                .doOnError(fut::fail)
+                .subscribe(fut::complete);
+        return fut;
+    }
+
+    /**
+     * Requests an adjective from the appropriate microservice and returns a future with
+     * the result
+     * @return A {@link Future} of type {@link JsonObject} which will contain an adjective
+     *         on success
+     */
+    Future<JsonObject> getAdjective() {
+        Future<JsonObject> fut = Future.future();
+        adjClient.get("/api/v1/adjective")
+                .timeout(3000)
+                .rxSend()
+                .map(InsultServiceImpl::mapStatusToError)
+                .map(HttpResponse::bodyAsJsonObject)
+                .doOnError(fut::fail)
+                .subscribe(fut::complete);
+        return fut;
+    }
+}
+----
+
+We have defined some new methods which allow us to make HTTP requests and return `Future`s for asynchronous interaction.
+These futures can then be composed in another method:
+
+.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+[source,java,subs=attributes+]
+----
+    // -- SNIP --
+
+    /**
+     * When the {@link CompositeFuture} is failed, throws an exception in order to
+     * interrups the RxJava stream processing
+     * @param res The {@link CompositeFuture} to be processed
+     * @return Same as the input as long as the {@link CompositeFuture} was succeeded
+     * @throws Exception If the {@link CompositeFuture} is failed
+     */
+    private static final CompositeFuture mapResultToError(CompositeFuture res)
+                                                                    throws Exception {
+        if (res.succeeded()) {
+            return res;
+        }
+        throw new Exception(res.cause());
+    }
+
+    /**
+     * Take results of {@link CompositeFuture} and return a composed {@link JsonObject}
+     * containing the insult components
+     * @param cf An instance of {@link CompositeFuture} which MUST be succeeded,
+     *           otherwise it would have been filtered
+     * @return A {@link JsonObject} containing a noun and an array of adjectives.
+     */
+    private static AsyncResult<JsonObject> buildInsult(CompositeFuture cf) {
+        JsonObject insult = new JsonObject();
+        JsonArray adjectives = new JsonArray();
+
+        // Because there is no garanteed order of the returned futures, we need to parse
+        the results
+        for (int i=0; i<=cf.size(); i++) {
+            JsonObject item = cf.resultAt(i);
+            if (item.containsKey("adjective")) {
+                adjectives.add(item.getString("adjective"));
+            } else {
+                insult.put("noun", item.getString("noun"));
+            }
+        }
+        insult.put("adjectives", adjectives);
+
+        return Future.succeededFuture(insult);
+    }
+
+    /**
+     * Request adjectives and a noun from the other microservices
+     * @param insultGetHandler A {@link Handler} callback for the results
+     */
+    @Override
+    public void getREST(Handler<AsyncResult<JsonObject>> insultGetHandler) {
+        // Request 2 adjectives and a noun in parallel, then handle the results
+        CompositeFuture.all(getNoun(), getAdjective(), getAdjective())
+                .rxSetHandler()
+                .map(InsultServiceImpl::mapResultToError)   {conum-guard-groovy} <1>
+                .map(InsultServiceImpl::buildInsult)        {conum-guard-groovy} <2>
+                .onErrorReturn(Future::failedFuture)        {conum-guard-groovy} <3>
+                .subscribe(insultGetHandler::handle);       {conum-guard-groovy} <4>
+    }
+
+    -- SNIP --
+----
+<1> Map errors to an exception
+<2> Combine the 3 results into a single JSON object
+<3> When an exception happens, map it to a failed future
+<4> Map successful JSON to a succeeded future
+
+`CompositeFuture.all(...)` tells Vert.x to run ALL of the specified methods and return when ANY of them fails or ALL
+of them succeed. All of the methods are run non-blocking and potentially in parallel. In this case, we request 2
+adjectives and a noun. We then pipe the the result through a handler which combines the 3 successful results into a
+single `JsonObject`.
 
 <<<
 === Implement REST API

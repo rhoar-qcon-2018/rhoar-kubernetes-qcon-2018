@@ -986,6 +986,7 @@ For more simple interactions with HTTP servers, the Vert.x team provides the `ve
 with the other microservices via REST, we will use the web client. The simple case of using the web client is
 demonstrated below:
 
+==== [[section-4-f-1]] Vert.x Web Client
 .Web Client Example
 [source,java,subs=attributes+]
 ----
@@ -1047,8 +1048,10 @@ private void example(Future<JsonObject> httpResponse) {
 }
 ----
 
-This code is simple to test and easier to read. As we go forward, this is the pattern I will advocate. Now, let's
-implement some methods so that we can make requests to our associated microservices and retrieve the results.
+This code is simple to test and easier to read. As we go forward, this is the pattern I will advocate.
+
+==== [[section-4-f-2]] Implementing the Insult Service Using Web Client
+Now, let's implement some methods so that we can make requests to our associated microservices and retrieve the results.
 
 .src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
 [source,java,subs=attributes+]
@@ -1237,6 +1240,92 @@ These futures can then be composed in another method:
 of them succeed. All of the methods are run non-blocking and potentially in parallel. In this case, we request 2
 adjectives and a noun. We then pipe the the result through a handler which combines the 3 successful results into a
 single `JsonObject`.
+
+==== [[section-4-f-3]] Consuming A Service Proxy API From Another Vert.x Service
+
+There is a third microservice implemented for you which we will need to interact with.
+This service is implemented in Vert.x and uses Service Proxies. Since it is implemented
+with Service Proxies, we can consume that service using the Service Proxy client which
+is generated for us by Vert.x's Code Generation.
+
+<<<
+First, add the library for the service proxy client:
+
+.pom.xml
+[source,xml,subs=attributes+]
+----
+        <!-- SNIP -->
+        <dependency>
+            <groupId>com.redhat.qcon</groupId>
+            <artifactId>kafka-service</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <!-- SNIP -->
+----
+
+Next, we can create an instance of the Service Proxy from our application.
+
+[source,java,subs=attributes+]
+----
+public class InsultServiceImpl implements InsultService {
+
+    Vertx vertx;
+    WebClient nounClient, adjClient;
+    KafkaService kafka;
+
+    /**
+     * Default constructor
+     * @param vertx The Vert.x instance to be used
+     * @param config The {@link JsonObject} configuration for this service
+     */
+    public InsultServiceImpl(io.vertx.core.Vertx vertx, JsonObject config) {
+
+        kafka = KafkaService
+                    .createProxy(Vertx.newInstance(vertx), "kafka.service");    {conum-guard-groovy} <1>
+
+        JsonObject nounConfig = config.getJsonObject("noun");
+        JsonObject adjConfig = config.getJsonObject("adjective");
+        this.vertx = Vertx.newInstance(vertx);
+        WebClientOptions nounClientOpts = new WebClientOptions(nounConfig)
+                .setLogActivity(true);
+        WebClientOptions adjClientOpts = new WebClientOptions(adjConfig)
+                .setLogActivity(true);
+        nounClient = WebClient.create(this.vertx, nounClientOpts);
+        adjClient = WebClient.create(this.vertx, adjClientOpts);
+    }
+
+
+    /**
+     * The the {@link KafkaService} event bus proxy to make calls to the
+     * Kafka microservice
+     * @param insult An insult made up of 2 adjectives and a noun
+     * @param handler A handler to be called
+     */
+    @Override
+    public InsultService publish(JsonObject insult, Handler<AsyncResult<Void>> handler) {
+        Future<Void> fut = Future.future();                                     {conum-guard-groovy} <2>
+        handler.handle(fut);                                                    {conum-guard-groovy} <3>
+        kafka.rxPublish(insult)
+                .toObservable()
+                .doOnError(fut::fail)                                           {conum-guard-groovy} <4>
+                .subscribe(v -> fut.complete());                                {conum-guard-groovy} <5>
+        return this;
+    }
+
+    // -- SNIP --
+----
+<1> Create an instance of the proxy at the class scope (See note below)
+<2> Create a Future with which to complete the handler
+<3> Set the handler to use the Future
+<4> Set the Rx error handler to fail the Future on error
+<5> Set the completion of the Rx stream to complete the Future
+
+[IMPORTANT]
+====
+When creating an instance of a Service Proxy client, you MUST ensure that the address
+on the event bus matches the address on the service which binds that address. If the
+addresses do not match, you will be sending messages into an unused message queue.
+====
 
 <<<
 === Implement REST API

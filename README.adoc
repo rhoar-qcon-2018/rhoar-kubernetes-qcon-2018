@@ -59,6 +59,8 @@ Some of the tools we will leverage in this workshop are listed below:
 
 :sectnums:
 :sectnumlevels: 5
+:sectlinks:
+:sectanchors:
 == OpenShift and Kubernetes Overview
 
 === Containers
@@ -161,14 +163,14 @@ You have access to the following projects and can switch between them with 'oc p
 === Final Configurations
 
 . Log in to the Web Console for the cluster https://console.qcon2018.rhpds.redhat.com/[HERE]
-. Open your DevOps Environment labelled as `USERNAME-labs-ci-cd`
+. Open your DevOps Environment labeled as `USERNAME-labs-ci-cd`
 . Click on the link for *SonarQube* to open it in a new tab/window
 . Log in with `admin/admin`
 . Generate a new token when prompted and copy it to your clipboard
 . Return to the OpenShift Console, click the link for Jenkins
 . Log in with your OpenShift Username/Password
 . Click on **Manage Jenkins** and then click on **Configure System**
-. Locate section labelled **SonarQube servers** and if there is not already a configured server, add one as shown below:
+. Locate section labeled **SonarQube servers** and if there is not already a configured server, add one as shown below:
 +
 ===
 Name: sonar
@@ -449,6 +451,7 @@ vertx.executeBlocking(future -> {
 });
 ----
 
+[#event-bus-intro]
 ==== Event Bus
 The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to
 run single-threaded and potentially across multiple threads/cores in parallel, we need a safe way to share data which
@@ -714,7 +717,7 @@ Kubernetes specific config as the cluster will allow Multicast DNS discovery ins
 <<<
 === Implement A New https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first
-<<#section-4-b-eventbus,example>> of sending and receiving on the event bus, we used a producer and a consumer based on
+<<event-bus-intro, event bus example>> of sending and receiving on the event bus, we used a producer and a consumer based on
 rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer
 experience. Instead, we can use Vert.x Service Proxies to provide an easier way to implement business logic
 and then expose that business logic on the event bus in a more consumable manner. These Service Proxy implementations

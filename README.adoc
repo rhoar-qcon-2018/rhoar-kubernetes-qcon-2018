@@ -1589,10 +1589,6 @@ info:
   version: "1.0.5"
   title: 'Insult Service'
   description: 'API for Elizabethan Insult Generator Microservices'
-# Added by API Auto Mocking Plugin
-servers:
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/InfoSec812/Insult/1
 tags:
   - name: insult
     description: An Elizabethan derrogatory insult
@@ -1600,9 +1596,7 @@ paths:
   /health:
     get:
       summary: Get the health of the service
-      description: >
-        Returns an HTTP response code and a JSON document detailing the current
-        health status of the service
+      description: 'Returns an HTTP response code and a JSON document detailing the current health status of the service'
       operationId: health
       responses:
         '200':
@@ -1640,23 +1634,27 @@ components:
       properties:
         status:
           type: string
-        details:
+        noun:
           type: string
-        error:
+        adj:
           type: string
     insult:
       type: object
       required:
       - noun
-      - adj1
-      - adj2
+      - adj
       properties:
         noun:
           type: string
-        adj1:
-          type: string
-        adj2:
-          type: string
+        adj:
+          type: array
+          items:
+            type: string
+    insultrequest:
+      type: object
+      required:
+      - name
+      properties:
         name:
           type: string
 ----
@@ -1833,10 +1831,34 @@ that if you CAN avoid dependency injection, you have one less bit of _magic_ tha
 be difficult to debug.
 ====
 
-<<<
+=== Implement A Health Check REST Endpoint
+In order to take full advantage of containers and Kubernetes/OpenShift we should define
+a health check REST endpoint which the orchestrator can poll to ensure that an
+application is running properly. This is trivial to implement in our application.
 
+Since we have already defined a `/health` endpoint in our OpenAPI specification, we only
+need to write the service proxy implementation and wire it to our existing Router. Let's
+add the `check` method to our Service Proxy interface:
+
+.src/main/java/com/redhat/qcon/insult/services/insult/InsultService.java
+[source,java,subs=attributes+]
+----
+    /**
+     * Check the health of this service
+     * @param healthCheckHandler A {@link Handler} callback for the results
+     */
+    void check(Handler<AsyncResult<JsonObject>> healthCheckHandler);
+----
+
+And write a test to ensure that it is working as expected.
+
+
+
+<<<
 == Quality Analysis And Project Health Using SonarQube
 
+<<<
 == Security Analysis Using OWASP Zed Attack Proxy
 
+<<<
 == Vulnerability Analysis Using OWASP Dependency Check

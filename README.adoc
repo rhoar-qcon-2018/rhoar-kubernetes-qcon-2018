@@ -4,14 +4,19 @@ ifndef::icons[:conum-guard-java: // //]
 :conum-guard-groovy: //
 ifndef::icons[:conum-guard-groovy: // //]
 :icons: font
+:sectnumlevels: 5
 :pdf-page-size: Letter
 :source-highlighter: rouge
 :rouge-theme: github
 :rouge-style: github
 :doctype: book
+:toc:
+:toclevels: 5
+:toc-title: Contents
 Deven Phillips, Jeremy Davis, Ram Maddali
 v1.0, 2018-05-22
 
+:sectnums!:
 <<<
 [colophon]
 = Reactive Microservices and DevOps Pipelines on Kubernetes
@@ -21,7 +26,7 @@ v1.0, 2018-05-22
 This document is designed by Deven Phillips, Jeremy Davis, and Ram Maddali.
 
 <<<
-== Overview
+= Overview
 Microservices and Containers have changed the entire landscape of software
 development in the last few years. We are now able to decompose our development
 work into smaller and more digestible components which are easier to understand
@@ -52,38 +57,34 @@ Some of the tools we will leverage in this workshop are listed below:
 * https://projects.spring.io/spring-boot/[Spring Boot] An alternative to writing applications using JavaEE
 * https://hoverfly.readthedocs.io/en/latest/[HoverFly] A service virtualization tool which simplifies testing Microservices
 
-<<<
-== What we are going to do during today's workshop
+:sectnums:
+:sectnumlevels: 5
+== OpenShift and Kubernetes Overview
 
-. <<#section-1,▼>> OpenShift and Kubernetes Overview
-.. <<#section-1-a,▼>> Placeholder
-.. <<#section-1-b,▼>> Placeholder
-. <<#section-2,▼>> Load up a complete DevOps environment in Kubernetes using Ansible automation
-.. <<#section-2-a,▼>> Download/Install OpenShift Client Tools
-.. <<#section-2-b,▼>> Clone The Repositories
-.. <<#section-2-c,▼>> Log In To OpenShift
-.. <<#section-2-d,▼>> Deploy Using Ansible
-.. <<#section-2-e,▼>> Final Configurations
-. <<#section-3,▼>> Load our existing application code into this DevOps environment and wire it up to our GitHub repos
-. <<#section-4,▼>> Create a Vert.x microservice project to work with these existing services and communicate with each other
-.. <<#section-4-a,▼>> Set Up For Testing
-.. <<#section-4-b,▼>> Familiarize ourselves with some basic Vert.x concepts
-.. <<#section-4-c,▼>> Implement Vert.x Kubernetes Config
-.. <<#section-4-d,▼>> Configure Vert.x Clustering With Infinispan/JGroups
-.. <<#section-4-e,▼>> Implement clients for the noun and adjective services using OpenAPI specifications
-.. <<#section-4-f,▼>> Implement a REST API using OpenAPI 3 specifications and service proxies
-.. <<#section-4-g,▼>>Implement a new https://vertx.io/docs/vertx-service-proxy/java/[service proxy]
-.. <<#section-4-h,▼>>Implement a reactive Kafka system to stream "liked" insults
-.. <<#section-4-i,▼>>Generate JavaScript code to integrate our application into the UI
-.. <<#section-4-j,▼>>Implement circuit breakers to prevent poor user experience
-.. <<#section-4-k,▼>>Implement some BDD tests for our service
-. <<#section-4-b,▼>>Run our application code through the DevOps pipeline and resolve issues QUICKLY!
-. <<#section-5-b,▼>>Perform code quality analysis and unit/integration testing using SonarQube and HoverFly
-. <<#section-6-b,▼>>Analyze our web application for security vulnerabilities using OWASP Zed Attack Proxy
-. <<#section-7-b,▼>>Analyze our the library dependencies of our services to check for vulnerable libraries
+=== Containers
+
+=== Scheduler
+
+=== Pods
+
+=== Services
+
+=== OpenShift Extensions
+
+* User Interface
+* Logging (EFK)
+* Multitenancy
+* Cloud Native Storage
+* Routes vs Ingress+Ingress Controllers
+* Templates
+* Source-2-Image
+* Projects
+* Security
+* Software Defined Networking
+* Metrics (Prometheus/Hawkular/Heapster)
 
 <<<
-=== [[section-2]] Load A Complete DevOps Environment In Kubernetes
+== Load A Complete DevOps Environment In Kubernetes
 
 [NOTE]
 ====
@@ -91,7 +92,7 @@ While some of the process we will show here is specific to OpenShift, all of the
 be achieved using https://github.com/kubernetes/helm[Helm] in stock Kubernetes (Without the nice UI)
 ====
 
-==== [[section-2-a]] Download/Install OpenShift Client Tools
+=== Download/Install OpenShift Client Tools
 You can always download the latest OpenShift CLI tools from Github https://github.com/openshift/origin/releases[HERE]
 
 . Download the correct release for your platform
@@ -101,7 +102,7 @@ You can always download the latest OpenShift CLI tools from Github https://githu
 .. On *NIX systems, you can update your .<shell>rc files to add the location for `oc`
 .. On Windows systems, it is recommended to extract the archive into your *Documents* directory and add that folder to your PATH
 
-==== [[section-2-b]] Clone The Repositories
+=== Clone The Repositories
 
 . Open the `insult-service` repository https://github.com/rhoar-qcon-2018/insult-service[HERE]
 . Fork the repository to your own GitHub account
@@ -131,7 +132,7 @@ You can always download the latest OpenShift CLI tools from Github https://githu
 . From your preferred git client:
 .. `git clone --recurse-submodules -j8 git@github.com:**YOUR_GITHUB_ACCOUNT_HERE**/rhoar-kubernetes-qcon-2018`
 
-==== [[section-2-c]] Log In To The OpenShift Cluster
+=== Log In To The OpenShift Cluster
 
 [source, bash]
 ----
@@ -147,7 +148,7 @@ You have access to the following projects and can switch between them with 'oc p
   * my-project
 ----
 
-==== [[section-2-d]] Deploy The DevOps environment using Ansible
+=== Deploy The DevOps environment using Ansible
 
 . Open a terminal which can execute Docker commands
 . Change directory to the location where you cloned the repositories
@@ -157,7 +158,7 @@ You have access to the following projects and can switch between them with 'oc p
 .. On *NIX, use `run.sh`
 . Wait a few minutes for the environment to finish provisioning
 
-==== [[section-2-e]] Final Configurations
+=== Final Configurations
 
 . Log in to the Web Console for the cluster https://console.qcon2018.rhpds.redhat.com/[HERE]
 . Open your DevOps Environment labelled as `USERNAME-labs-ci-cd`
@@ -169,7 +170,7 @@ You have access to the following projects and can switch between them with 'oc p
 . Click on **Manage Jenkins** and then click on **Configure System**
 . Locate section labelled **SonarQube servers** and if there is not already a configured server, add one as shown below:
 +
-====
+===
 Name: sonar
 
 Server URL: http://sonarqube:9000
@@ -181,14 +182,14 @@ Server authentication token: <PASTE TOKEN HERE>
 SonarQube account login: <BLANK>
 
 SonarQube account password: <BLANK>
-====
+===
 
 <<<
-=== [[section-3]]
+== Load Applications Into CI/CD Environment
 
 
 <<<
-=== [[section-4]] Create a new Vert.x project
+== Create A New Vert.x Project
 . Ensure that you have Apache Maven >= 3.3.9
 . From the `insult-service` directory, run the following command
 
@@ -197,11 +198,11 @@ SonarQube account password: <BLANK>
 ----
 $ mvn io.fabric8:vertx-maven-plugin:1.0.13:setup -DvertxVersion=3.5.1
 [INFO] Scanning for projects...
-[INFO] 
+[INFO]
 [INFO] ------------------------------------------------------------------------
 [INFO] Building Maven Stub Project (No POM) 1
 [INFO] ------------------------------------------------------------------------
-[INFO] 
+[INFO]
 [INFO] --- vertx-maven-plugin:1.0.13:setup (default-cli) @ standalone-pom ---
 [INFO] No pom.xml found, creating it in /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service
 Set the project groupId [io.vertx.example]: com.redhat.qcon
@@ -231,7 +232,7 @@ After the POM file has been created, we will need to add some additional librari
 * vertx-codegen
 * vertx-lang-js
 
-All of these are within the `io.vertx` Maven group ID and covered via the depenency management setup 
+All of these are within the `io.vertx` Maven group ID and covered via the depenency management setup
 from the initialization process, so we can put them in without versions as follows:
 
 .POM Excerpt Showing Provided and Processor Dependencies
@@ -271,7 +272,7 @@ from the initialization process, so we can put them in without versions as follo
 ----
 
 <<<
-=== [[section-4-a]] Set Up For Testing
+=== Set Up For Testing
 
 Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. Personally,
 I prefer BDD style tests, so for this workshop I will be demonstrating
@@ -377,7 +378,7 @@ run the Spock tests:
 ----
 
 <<<
-=== [[section-4-b]] Basic Vert.x Concepts
+=== Basic Vert.x Concepts
 
 The https://vertx.io/docs/vertx-core/java/[Vert.x Core Documentation] is a really great reference to some of the basic
 concepts in Vert.x. We'll cover a few of these things here, but please feel free to go to the official docs for more
@@ -448,7 +449,7 @@ vertx.executeBlocking(future -> {
 });
 ----
 
-==== [[section-4-b-eventbus]] Event Bus
+==== Event Bus
 The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to
 run single-threaded and potentially across multiple threads/cores in parallel, we need a safe way to share data which
 will not cause race conditions or concurrency problems. To facilitate this, Vert.x has an Event Bus through which we
@@ -473,7 +474,7 @@ vertx.timerStream(300)
 ----
 
 <<<
-=== [[section-4-c]] Implement Kubernetes Config
+=== Implement Kubernetes Config
 Following one of the tenets of https://12factor.net/config[12 Factor Applications], we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
 by providing a comprehensive set of APIs for loading the application's configuration. In our case, since we are
@@ -495,30 +496,31 @@ import spock.util.concurrent.AsyncConditions
 class MainVerticleSpec extends Specification {
 
     def 'Test Vert.x configuration loading'() {
-        given: 'An instance of Vert.x'                          {conum-guard-groovy} <1>
-            def vertx = Vertx.vertx()
-        and: 'An instance of a Vert.x Future'                   {conum-guard-groovy} <2>
-            def fut = Future.future()
-        and: '''An instance of Spock's AsyncConditions'''       {conum-guard-groovy} <3>
-            def async = new AsyncConditions(1)
+            given: 'An instance of Vert.x'  {conum-guard-groovy} <1>
+                def vertx = Vertx.vertx()
+            and: 'An instance of a Vert.x Future'  {conum-guard-groovy} <2>
+                def fut = Future.future()
+            and: '''An instance of Spock's AsyncConditions'''
+                def async = new AsyncConditions(1)          {conum-guard-groovy} <4>
 
-        when: 'We attempt to deploy the main Verticle'          {conum-guard-groovy} <4>
-            vertx.deployVerticle(new MainVerticle(), fut.completer())
+            when: 'We attempt to deploy the main Verticle'  {conum-guard-groovy} <3>
+                vertx.deployVerticle(new MainVerticle(), fut.completer())
 
-        then: 'Expect that the correct configuration is found and loaded'
-            fut.setHandler({ res ->
-                async.evaluate {                                {conum-guard-groovy} <5>
-                    res.succeeded()                             {conum-guard-groovy} <6>
-                    def config = vertx.getOrCreateContext().config()
-                    config.hasProperty('noun')                  {conum-guard-groovy} <7>
-                    config.hasProperty('adjective')             {conum-guard-groovy} <8>
-                    config.hasProperty('http')                  {conum-guard-groovy} <9>
-                }
-            })
+            then: 'Expect that the correct configuration is found and loaded'
+                fut.setHandler({ res ->
+                    async.evaluate {                                        {conum-guard-groovy} <5>
+                        def config = vertx.getOrCreateContext().config()
+                        assert res.succeeded() {conum-guard-groovy} <6>
+                        assert config.hasProperty('insult') {conum-guard-groovy} <7>
+                        assert config.hasProperty('adjective') {conum-guard-groovy} <8>
+                        assert config.hasProperty('http') {conum-guard-groovy} <9>
+                    }
+                })
 
-        cleanup: 'Await the async operations'                   {conum-guard-groovy} <10>
-            async.await(10)
-    }
+            cleanup: 'Await the async operations'  {conum-guard-groovy} <10>
+                async.await(3600)
+                vertx.close()
+        }
 }
 ----
 <1> Set our starting conditions. In this case, we need a running Vert.x instance
@@ -639,7 +641,7 @@ time and resources for little gain. You should, however, aim to cover all critic
 ====
 
 <<<
-=== [[section-4-d]] Configure Vert.x Clustering With Infinispan/JGroups
+=== Configure Vert.x Clustering With Infinispan/JGroups
 A really impressive feature we can use in Vert.x is it's low-level support for clustering and distributed processing
 using the Event Bus. Vert.x supports a few different cluster manager implementations like
 https://vertx.io/docs/vertx-hazelcast/java[Hazelcast], https://vertx.io/docs/vertx-infinispan/java[Infinispan],
@@ -657,7 +659,7 @@ These features are used in some of Vert.x's other features for things like distr
 applications.
 
 
-==== [[section-4-d-1]] Add Clustering Dependencies
+==== Add Clustering Dependencies
 For this workshop, since we are using Kubernetes, we will use the Infinispan Cluster Manager by adding the following
 dependency
 
@@ -686,7 +688,7 @@ dependency
 When running locally, we can just add `--cluster` to the execution of the fat-jar and Infinispan+JGroups will automatically
 discover other Vert.x nodes on the same network segment via Multicast DNS (MCAST_PING).
 
-==== [[section-4-d-2]] Clustering Inside Kubernetes/OpenShift
+==== Clustering Inside Kubernetes/OpenShift
 When running inside of Kubernetes or OpenShift, we change the config with the system property
 `-Dvertx.jgroups.config=default-configs/default-jgroups-kubernetes.xml`.
 
@@ -695,7 +697,7 @@ namespace and also set the `KUBERNETES_NAMESPACE` environment variable. With the
 will automatically discover one another using the Kubernetes API.
 
 
-==== [[section-4-d-3]] Benefits Of Vert.x Clustering
+==== Benefits Of Vert.x Clustering
 This means that event bus messages can be sent and received across all Vert.x instances. This makes it possible to:
 
 * Distribute capabilities to different microservices in a reactive manner
@@ -710,7 +712,7 @@ Kubernetes specific config as the cluster will allow Multicast DNS discovery ins
 ====
 
 <<<
-=== [[section-4-e]] Implement a new https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
+=== Implement A New https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first
 <<#section-4-b-eventbus,example>> of sending and receiving on the event bus, we used a producer and a consumer based on
 rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer
@@ -721,7 +723,7 @@ multiple microservices. For our workshop, we will be integrating with a few othe
 and Adjectives for our insults. The Noun service is implemented in NodeJS, while the Adjective service is implemented
 using Spring Boot.
 
-==== [[section-4-e-1]] Prepare For The Code Generator
+==== Prepare For The Code Generator
 
 In order for the Vert.x code generation to work, we need to annotate the package which will contain the code to be
 processed. We do this by creating a `package-info.java` file. You should place this file deep enough in the heirarchy
@@ -736,7 +738,7 @@ package com.redhat.qcon.insult.services;
 import io.vertx.codegen.annotations.ModuleGen;
 ----
 
-==== [[section-4-e-2]] The Interface
+==== The Interface
 All service proxies start with an Interface definition which looks something like this:
 
 .src/main/java/com/redhat/qcon/services/insult/InsultService.java
@@ -794,7 +796,7 @@ defaults to *_package private_*. By doing this, when we implement unit/BDD tests
 directly in order to facilitate simplified testing.
 ====
 
-==== [[section-4-e-3]] Test First Development
+==== Test First Development
 
 When we use the philosophy of _test first_ development, we expect to follow the pattern of:
 
@@ -888,7 +890,7 @@ define a `SimulationSource`.
     static final String ADJ_RESPONSE_BODY_ONE =
                             new JsonObject().put('adj', 'adjective').encodePrettily()
 
-    static final SimulationSource GET_RESPONSE_ONE = dsl(                       {conum-guard-groovy} <1>
+    static final SimulationSource GET_RESP_ONE = dsl(                       {conum-guard-groovy} <1>
             service('localhost')
                     .get("/api/v1/noun")
                     .willReturn(success(NOUN_RESPONSE_BODY_ONE,
@@ -898,12 +900,12 @@ define a `SimulationSource`.
                     .willReturn(success(ADJ_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())))
 
-    static final SimulationSource GET_RESPONSE_TWO = dsl(                       {conum-guard-groovy} <2>
+    static final SimulationSource GET_RESP_TWO = dsl(                       {conum-guard-groovy} <2>
             service('localhost')
                     .get("/api/v1/noun")
                     .willReturn(serverError()))
 
-    static final SimulationSource GET_RESPONSE_THREE = dsl(                     {conum-guard-groovy} <3>
+    static final SimulationSource GET_RESP_THREE = dsl(                     {conum-guard-groovy} <3>
             service('localhost')
                     .andDelay(10, TimeUnit.SECONDS).forAll(),
             service('localhost')
@@ -940,7 +942,76 @@ define a `SimulationSource`.
 <5> Finally, we create a new `Vertx` instance within which we will run all of our specifications
 <6> In the `setup()` method, we ensure that the state of Hoverfly is reset before each test specification
 
-==== [[section-4-e-4]] Creating The Service Implementation
+Now that we have set up the simulations for the dependent services, we can write our specification test.
+
+.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
+[source,java,subs=attributes+]
+----
+    @Unroll                                                                 {conum-guard-groovy} <9>
+    def 'Test getting a noun: #description'() {
+        setup: 'Http Client Config to work with Hoverfly'                   {conum-guard-groovy} <1>
+            def httpClientConfig = new JsonObject()
+                    .put('noun',
+                    new JsonObject().put('host', 'localhost')
+                            .put('ssl', false)
+                            .put('port', 80)
+                            .put('proxyOptions', proxyOptions)
+            )
+                    .put('adjective',
+                    new JsonObject().put('host', 'localhost')
+                            .put('ssl', false)
+                            .put('port', 80)
+                            .put('proxyOptions', proxyOptions)
+            )
+
+        and: 'Create the service under test'                                {conum-guard-groovy} <2>
+            InsultServiceImpl underTest = new InsultServiceImpl(vertx, httpClientConfig)
+
+        and: 'AsyncConditions'                                              {conum-guard-groovy} <3>
+            def conds = new AsyncConditions(1)
+
+        and: 'Service virtualization has been configured'                   {conum-guard-groovy} <4>
+            hoverfly.simulate(simulation)
+
+        and: 'We call the Service Proxy'                                    {conum-guard-groovy} <5>
+            underTest.getREST({ res ->
+                  conds.evaluate {                                          {conum-guard-groovy} <6>
+                      assert succeeded == res.succeeded()
+                      assert res?.result()?.getJsonArray('adjectives')?.getAt(0) == adjective
+                      assert res?.result()?.getString('noun') == noun
+                  }
+            })
+
+        expect: 'The appropriate response to REST calls'                    {conum-guard-groovy} <7>
+            conds.await(10)
+
+        where: 'The following data is applied'                              {conum-guard-groovy} <8>
+            simulation         | description    || succeeded | adjective   | noun
+            GET_RESP_ONE   | 'Happy path'   || true      | 'adjective' | 'noun'
+            GET_RESP_TWO   | 'Server error' || false     | null        | null
+            GET_RESP_THREE | 'Slow reply'   || true      | 'adjective' | 'noun'
+    }
+----
+<1> Create a JsonObject which will cause the service to make requests through the Hoverfly proxy
+<2> Instantiate the service to be tested using that configuration
+<3> Create an instance of `AsyncConditions` so that we can coordinate with reactive code
+<4> Set the simulation to be used
+<5> Make the call to the service under test and create a lambda handler which evaluates the results using the `AsyncConditions`
+<6> Inside of the `conds.evaluate { }` block, we can place our assertions
+<7> Tell `AsyncConditions` to way 10 seconds for the async operations to complete
+<8> Use a _data table_ to allow us to run multiple test scenarios with a single block of code
+<9> Use the `@Unroll` annotation to show each test iteration as a separate test
+
+If you are at all familiar with Behavior Driven Development (BDD) or have worked a lot in
+QA, you will probably recognize the format of the Spock tests... They follow the Gherkin
+model of defining specifications. Either _given, when, then_, or _expect, where_.
+
+You'll also notice that we can test 3 different scenarios with the same code by putting
+different data into the table. We could add as many of these as we like to ensure we
+cover the critical paths.
+
+<<<
+==== Creating The Service Implementation
 
 We can now create a class which implements our interface. We have left the service implementation class as a stub so
 that we can delve deeper into HTTP clients in the next section.
@@ -981,14 +1052,14 @@ public class InsultServiceImpl implements InsultService {
 ----
 
 <<<
-=== [[section-4-f]] Implement REST clients
+=== Implement REST clients
 Vert.x provides both a high-level and low-level method of interacting with HTTP servers. In the core Vert.x package,
 there is `vertx.createHttpClient()`, and it allows for very customizable handling of making requests to HTTP servers.
 For more simple interactions with HTTP servers, the Vert.x team provides the `vertx-web-client` library. For interacting
 with the other microservices via REST, we will use the web client. The simple case of using the web client is
 demonstrated below:
 
-==== [[section-4-f-1]] Vert.x Web Client
+==== Vert.x Web Client
 .Web Client Example
 [source,java,subs=attributes+]
 ----
@@ -1052,7 +1123,7 @@ private void example(Future<JsonObject> httpResponse) {
 
 This code is simple to test and easier to read. As we go forward, this is the pattern I will advocate.
 
-==== [[section-4-f-2]] Implementing the Insult Service Using Web Client
+==== Implementing the Insult Service Using Web Client
 Now, let's implement some methods so that we can make requests to our associated microservices and retrieve the results.
 
 .src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
@@ -1243,7 +1314,7 @@ of them succeed. All of the methods are run non-blocking and potentially in para
 adjectives and a noun. We then pipe the the result through a handler which combines the 3 successful results into a
 single `JsonObject`.
 
-==== [[section-4-f-3]] Consuming A Service Proxy API From Another Vert.x Service
+==== Consuming A Service Proxy API From Another Vert.x Service
 
 There is a third microservice implemented for you which we will need to interact with.
 This service is implemented in Vert.x and uses Service Proxies. Since it is implemented
@@ -1267,6 +1338,7 @@ First, add the library for the service proxy client:
 
 Next, we can create an instance of the Service Proxy from our application.
 
+.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
 public class InsultServiceImpl implements InsultService {
@@ -1339,10 +1411,171 @@ Adding `vertx-lang-scala` will generate the library in Scala and so on. This is 
 supremely powerful feature for integration and API sharing.
 ====
 
-<<<
-== [[section-5]] Implement REST API
+==== Refactor To Implement Circuit Breakers
 
-=== [[section-5-a]] Using OpenAPI 3 Spec file to create REST API in Vert.x
+Since we are operating in a microservices environment, we would be remiss if we did not
+implement circuit breakers to ensure timely responses from our applications. Vert.x has
+an add-on module for implementing Circuit Breakers in the Vert.x non-blocking and
+reactive environment.
+
+.pom.xml
+[source,xml,subs=attributes+]
+----
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-circuit-breaker</artifactId>
+        </dependency>
+----
+
+==== Refactor Test Specifications To Account For New Capability
+
+Back to our _test first development_ idea, we need to refactor our test to account for
+our new capability. We'll modify the test result for the delayed response test so that
+we expect a circuit breaker result instead of a normal success response.
+
+
+.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.java
+[source,java,subs=attributes+]
+----
+    static final SimulationSource GET_RESP_THREE = dsl(
+            service('localhost')
+                    .get('/api/v1/noun')
+                    .willReturn(success(NOUN_RESPONSE_BODY_ONE,
+                                        APPLICATION_JSON.toString())
+                                    .withDelay(1, TimeUnit.SECONDS)),
+            service('localhost')
+                    .get("/api/v1/adjective")
+                    .willReturn(success(ADJ_RESPONSE_BODY_ONE,
+                                        APPLICATION_JSON.toString())))
+
+    static final SimulationSource GET_RESP_FOUR = dsl(
+            service('localhost')
+                    .get('/api/v1/noun')
+                    .willReturn(success(NOUN_RESPONSE_BODY_ONE,
+                                        APPLICATION_JSON.toString())),
+            service('localhost')
+                    .get("/api/v1/adjective")
+                    .willReturn(success(ADJ_RESPONSE_BODY_ONE,
+                                        APPLICATION_JSON.toString())
+                                    .withDelay(1, TimeUnit.SECONDS)))
+
+    @Unroll
+    def 'Test getting a noun: #description'() {
+        setup: 'Http Client Config to work with Hoverfly'
+            def httpClientConfig = new JsonObject()
+                    .put('noun',
+                    new JsonObject().put('host', 'localhost')
+                            .put('ssl', false)
+                            .put('port', 80)
+                            .put('proxyOptions', proxyOptions)
+            )
+                    .put('adjective',
+                    new JsonObject().put('host', 'localhost')
+                            .put('ssl', false)
+                            .put('port', 80)
+                            .put('proxyOptions', proxyOptions)
+            )
+
+        and: 'Create the service under test'
+            InsultServiceImpl underTest = new InsultServiceImpl(vertx, httpClientConfig)
+
+        and: 'AsyncConditions'
+            def conds = new AsyncConditions(1)
+
+        and: 'Service virtualization has been configured'
+            hoverfly.simulate(simulation)
+
+        and: 'We call the Service Proxy'
+            underTest.getREST({ res ->
+                conds.evaluate {
+                    assert succeeded == res.succeeded()
+                    def body = res?.result()
+                    assert body?.getJsonArray('adjectives')?.getAt(0) == adjective
+                    assert body?.getString('noun') == noun
+                }
+            })
+
+        expect: 'The appropriate response to REST calls'
+        conds.await(10)
+
+        where: 'The following data is applied'
+            simulation         | description    || succeeded | adjective   | noun
+            GET_RESP_ONE   | 'Happy path'   || true      | 'adjective' | 'noun'
+            GET_RESP_TWO   | 'Server error' || false     | null        | null
+            GET_RESP_THREE | 'Slow reply'   || true      | 'adjective' | '[timeout]'
+            GET_RESP_FOUR  | 'Slow reply'   || true      | '[timeout]' | 'noun'
+    }
+----
+
+When we run this modified test, we expect that the last 2 scenarios will fail because we have not yet implemented
+the circuit breakers.
+
+Let's have a look at how we would add circuit breakers to the
+method which calls the adjective service.
+
+.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+[source,java,subs=attributes+]
+----
+    private final CircuitBreaker adjBreaker;
+    private final CircuitBreaker nounBreaker;
+
+    /**
+     * Default constructor
+     * @param vertx The Vert.x instance to be used
+     * @param config The {@link JsonObject} configuration for this service
+     */
+    public InsultServiceImpl(io.vertx.core.Vertx vertx, JsonObject config) {
+
+        kafka = KafkaService.createProxy(Vertx.newInstance(vertx), "kafka.service");
+
+        JsonObject nounConfig = config.getJsonObject("noun");
+        JsonObject adjConfig = config.getJsonObject("adjective");
+        this.vertx = Vertx.newInstance(vertx);
+        WebClientOptions nounClientOpts = new WebClientOptions(nounConfig)
+                .setLogActivity(true);
+        WebClientOptions adjClientOpts = new WebClientOptions(adjConfig)
+                .setLogActivity(true);
+        nounClient = WebClient.create(this.vertx, nounClientOpts);
+        adjClient = WebClient.create(this.vertx, adjClientOpts);
+                        .fallback(t -> new JsonObject().put("noun", "[open]"))
+
+        CircuitBreakerOptions breakerOpts = new CircuitBreakerOptions()
+                                                    .setFallbackOnFailure(true)
+                                                    .setMaxFailures(3)
+                                                    .setMaxRetries(3)
+                                                    .setResetTimeout(15000)
+                                                    .setTimeout(250);
+
+        adjBreaker = CircuitBreaker
+                        .create("adjBreaker", Vertx.newInstance(vertx), breakerOpts)
+                        .openHandler(t -> new JsonObject().put("adj", "[open]"))
+                        .fallback(t -> new JsonObject().put("adj", "[failure]"));
+
+        nounBreaker = CircuitBreaker
+                        .create("nounBreaker", Vertx.newInstance(vertx), breakerOpts)
+                        .openHandler(t -> new JsonObject().put("noun", "[open]"))
+                        .fallback(t -> new JsonObject().put("noun", "[failure]"));
+    }
+
+    /**
+     * Requests an adjective from the appropriate microservice and returns a future with the result
+     * @return A {@link Future} of type {@link JsonObject} which will contain an adjective on success
+     */
+    io.vertx.reactivex.core.Future<JsonObject> getAdjective() {
+        return adjBreaker.execute(fut ->
+            adjClient.get("/api/v1/adjective")
+                     .timeout(HTTP_CLIENT_TIMEOUT)
+                     .rxSend()
+                     .flatMapMaybe(InsultServiceImpl::mapStatusToError)
+                     .map(HttpResponse::bodyAsJsonObject)
+                     .subscribe(fut::complete, fut::fail));
+    }
+----
+
+<<<
+== Implement REST API
+
+=== Using OpenAPI 3 Spec file to create REST API in Vert.x
 
 In order to use the OpenAPI Router Factory in Vert.x we must first create a new API
 specification using OpenAPI v3. For our Insult service, we will write a simple REST
@@ -1436,11 +1669,11 @@ recommended that you paste the code above into that editor to view the API speci
 ====
 
 <<<
-=== [[section-5-b]] Write Tests For The MainVerticle
+=== Write Tests For The MainVerticle
 
 
 <<<
-=== [[section-5-c]] Adding The OpenAPI Router Factory To The MainVerticle
+=== Adding The OpenAPI Router Factory To The MainVerticle
 
 Earlier, we created the skeleton of the `MainVerticle` class. Now we will expand that
 service to wire up the service proxy we have written and we will expose that service
@@ -1600,4 +1833,10 @@ that if you CAN avoid dependency injection, you have one less bit of _magic_ tha
 be difficult to debug.
 ====
 
-== [[section-6]]
+<<<
+
+== Quality Analysis And Project Health Using SonarQube
+
+== Security Analysis Using OWASP Zed Attack Proxy
+
+== Vulnerability Analysis Using OWASP Dependency Check

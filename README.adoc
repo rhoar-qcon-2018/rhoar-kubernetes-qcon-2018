@@ -33,7 +33,7 @@ work into smaller and more digestible components which are easier to understand
 and easier to split amongst developer teams for better parallel workflow.
 
 Just as Linux has pretty much won the hearts and minds of most developers
-for the operating system of the cloud, Kubernetes has become the de-facto
+for the operating system of the cloud, Kubernetes has become the de facto
 standard for orchestrating containers at scale.
 
 In this workshop, you will learn how to leverage Containers and Kubernetes
@@ -232,7 +232,7 @@ After the POM file has been created, we will need to add some additional librari
 * vertx-codegen
 * vertx-lang-js
 
-All of these are within the `io.vertx` Maven group ID and covered via the depenency management setup
+All of these are within the `io.vertx` Maven group ID and covered via the dependency management setup
 from the initialization process, so we can put them in without versions as follows:
 
 .POM Excerpt Showing Provided and Processor Dependencies
@@ -397,7 +397,7 @@ vertx.eventBus()
 ----
 
 Another core concept of Vert.x is that everything which is done in a Verticle should be done in a non-blocking way.
-To support this, Vert.x provides non-blocking implementations of many common functionalities such as:
+To support this, Vert.x provides non-blocking implementations of many common operations such as:
 
 * File I/O
 * Network I/O
@@ -726,7 +726,7 @@ using Spring Boot.
 ==== Prepare For The Code Generator
 
 In order for the Vert.x code generation to work, we need to annotate the package which will contain the code to be
-processed. We do this by creating a `package-info.java` file. You should place this file deep enough in the heirarchy
+processed. We do this by creating a `package-info.java` file. You should place this file deep enough in the hierarchy
 that will prevent most of the code from being considered, but high enough that you can process all required code:
 
 .src/main/java/com/redhat/qcon/services/package-info.java
@@ -876,7 +876,7 @@ services which this service will interact with. Hoverfly implements an HTTP prox
 interactions with an external service. We will use this to simulate both successful and failed responses from the
 other microservices so that we can easily test in isolation.
 
-To implement the simuations in Hoverfly, we use the
+To implement the simulations in Hoverfly, we use the
 http://hoverfly.readthedocs.io/projects/hoverfly-java/en/latest/pages/corefunctionality/dsl.html[Hoverfly DSL] to
 define a `SimulationSource`.
 

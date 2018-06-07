@@ -13,6 +13,7 @@ ifndef::icons[:conum-guard-groovy: // //]
 :toc:
 :toclevels: 5
 :toc-title: Contents
+:imagesdir: images
 Deven Phillips, Jeremy Davis, Ram Maddali
 v1.0, 2018-05-22
 
@@ -61,29 +62,153 @@ Some of the tools we will leverage in this workshop are listed below:
 :sectnumlevels: 5
 :sectlinks:
 :sectanchors:
+
 == OpenShift and Kubernetes Overview
+.OpenShift Container Platform Architecture Overview
+[#image-architecture]
+[caption="Figure 1: "]
+image::architecture_overview.png[Architecture]
+
+Kubernetes (and by extension OpenShift) is a system, based on microservices, for orchestrating
+containerized applications across one or more hosts. Just as the kernel schedules work
+in an operating system, the orchestrator schedules work in a cluster. Continuing with that
+analogy, kernels arbitrate access to resources like networking and disk, Kubernetes (a.k.a. K8s)
+provides access to software-defined networks and storage.
+
+Beyond the OS analogy though, K8s (and even more so OpenShift) can be a platform
+which abstracts some of the tedium of managing applications away for developers and
+administrators. The real power of K8s is in allowing for centralized and automated
+management of things like network controls, encryption, auditing, monitoring, logging,
+etc... Moving these functions to the platform simplifies the writing, understanding, and
+debugging of software.
 
 === Containers
 
-=== Scheduler
+Containers are a method of operating system virtualization that allow you to run an application and its dependencies in
+resource-isolated processes. Containers allow you to easily package an application's code, configurations, and
+dependencies into easy to use building blocks that deliver environmental consistency, operational efficiency, developer
+productivity, and version control. Containers can help ensure that applications deploy quickly, reliably, and
+consistently regardless of deployment environment. Containers also give you more granular control over resources giving
+your infrastructure improved efficiency. <<awsecs>>
 
-=== Pods
+=== Master
+.Kubernetes Master
+[#image-k8s-master]
+[caption="Figure 2: "]
+image::k8s_master.png[Master]
+
+The master is responsible for exposing the application program interface (API), scheduling the deployments and managing
+the overall cluster. Each node runs a container runtime, such as Docker or rkt, along with an agent that communicates
+with the master. The node also runs additional components for logging, monitoring, service discovery and optional
+add-ons. Nodes are the workhorses of a Kubernetes cluster. They expose compute, networking and storage resources to
+applications. Nodes can be virtual machines (VMs) running in a cloud or bare metal servers running within the data
+center. <<tnsk8s>>
+
+=== Nodes
+.Kubernetes Node
+[#image-k8s-node]
+[caption="Figure 3: "]
+image::k8s_node.png[Master]
+
+A node provides the runtime environments for containers. Each node in a Kubernetes cluster has the required services to
+be managed by the master. Nodes also have the required services to run pods, including the Docker service, a kubelet,
+and a service proxy. <<rhocpn>>
+
+==== Kubelet
+Each node has a kubelet that updates the node as specified by a container manifest, which is a YAML file that describes
+a pod. The kubelet uses a set of manifests to ensure that its containers are started and that they continue to run.
+
+==== Service Proxy
+Each node also runs a simple network proxy that reflects the services defined in the API on that node. This allows the
+node to do simple TCP and UDP stream forwarding across a set of back ends.
+
+=== FluentD
+The FluentD agent allows for streaming of container output into the logging backend of your choice (EFK in OpenShift).
 
 === Services
+A Kubernetes service serves as an internal load balancer. It identifies a set of replicated pods in order to proxy the
+connections it receives to them. Backing pods can be added to or removed from a service arbitrarily while the service
+remains consistently available, enabling anything that depends on the service to refer to it at a consistent address.
+The default service clusterIP addresses are from the OpenShift Container Platform internal network and they are used to
+permit pods to access each other.
 
-=== OpenShift Extensions
+=== Pods
+The Kubernetes concept of a pod, which is one or more containers deployed together on one host, and the smallest compute
+unit that can be defined, deployed, and managed. Pods are the rough equivalent of a machine instance (physical or
+virtual) to a container. Each pod is allocated its own internal IP address, therefore owning its entire port space, and
+containers within pods can share their local storage and networking.
 
-* User Interface
-* Logging (EFK)
-* Multitenancy
-* Cloud Native Storage
-* Routes vs Ingress+Ingress Controllers
-* Templates
-* Source-2-Image
-* Projects
-* Security
-* Software Defined Networking
-* Metrics (Prometheus/Hawkular/Heapster)
+=== OpenShift Extensions To Kubernetes
+
+==== Container Registry (OpenShift Only)
+OpenShift Container Platform provides an integrated container registry called OpenShift Container Registry (OCR) that
+adds the ability to automatically provision new image repositories on demand. This provides users with a built-in
+location for their application builds to push the resulting images.
+
+==== Web Console
+The OpenShift Container Platform web console is a user interface accessible from a web browser. Developers can use the
+web console to visualize, browse, and manage the contents of projects.
+
+==== Logging (EFK)
+OpenShift deploys a complete EFK (ElasticSearch, FluentD, Kibana) stack which is used to aggregate logs and metrics
+from each Pod. Output from containers can be kept according to the configured preferences.
+
+==== Software Defined Networking
+OpenShift Container Platform uses a software-defined networking (SDN) approach to provide a unified cluster network
+that enables communication between pods across the OpenShift Container Platform cluster. This pod network is
+established and maintained by the OpenShift SDN, which configures an overlay network using Open vSwitch (OVS).
+
+==== Multitenancy
+The ovs-multitenant plug-in provides project-level isolation for pods and services. Each project receives a unique
+Virtual Network ID (VNID) that identifies traffic from pods assigned to the project. Pods from different projects
+cannot send packets to or receive packets from pods and services of a different project.
+
+==== Container Native Storage
+Container-Native Storage for OpenShift Container Platform is built around three key technologies:
+
+* OpenShift provides the platform as a service (PaaS) infrastructure based on Kubernetes container management. Basic
+  OpenShift architecture is built around multiple master systems where each system contains a set of nodes.
+* Red Hat Gluster Storage provides the containerized distributed storage based on Red Hat Gluster Storage 3.1.3
+  container. Each Red Hat Gluster Storage volume is composed of a collection of bricks, where each brick is the
+  combination of a node and an export directory.
+* Heketi provides the Red Hat Gluster Storage volume life cycle management. It creates the Red Hat Gluster Storage
+  volumes dynamically and supports multiple Red Hat Gluster Storage clusters.
+
+==== Routes
+Routes allow OpenShift Container Platform route exposes a service at a host name, like `www.example.com`, so that
+external clients can reach it by name.
+
+==== Templates
+A template describes a set of objects that can be parameterized and processed to produce a list of objects for creation
+by OpenShift Container Platform. The objects to create can include anything that users have permission to create within
+a project, for example services, build configurations, and deployment configurations. A template may also define a set
+of labels to apply to every object defined in the template.
+
+==== Source-2-Image
+A template describes a set of objects that can be parameterized and processed to produce a list of objects for creation
+by OpenShift Container Platform. The objects to create can include anything that users have permission to create within
+a project, for example services, build configurations, and deployment configurations. A template may also define a set
+of labels to apply to every object defined in the template.
+
+==== Projects
+A project is a Kubernetes namespace with additional annotations, and is the central vehicle by which access to resources
+for regular users is managed. A project allows a community of users to organize and manage their content in isolation
+from other communities. Users must be given access to projects by administrators, or if allowed to create projects,
+automatically have access to their own projects.
+
+==== Security
+OpenShift implements a number of security enhancements over stock Kubernetes.
+
+* Default to non-root containers
+* Network isolation via Software-Defined Networking
+* Improved Roles, Groups, User management
+* Integration with Certificate Authorities and Identity Management
+
+==== Metrics (Prometheus/Hawkular/Heapster)
+OpenShift can be deployed along with Prometheus and Hawkular metrics tracking. When deployed these services provide
+continuous monitoring of basic application information like latency, CPU utilization, and memory consumption. Developers
+can also take advantage of these services to publish their own customized metrics to the services from their applications
+using the Hawkular/Prometheus APIs.
 
 <<<
 == Load A Complete DevOps Environment In Kubernetes
@@ -1865,3 +1990,14 @@ And write a test to ensure that it is working as expected.
 
 <<<
 == Vulnerability Analysis Using OWASP Dependency Check
+
+
+[bibliography]
+== References
+
+- [[[awsecs,1]]] Amazon Web Services: https://aws.amazon.com/what-are-containers/
+- [[[tnsk8s,2]]] The New Stack - Kubernetes An Overview: https://thenewstack.io/kubernetes-an-overview/
+- [[[rhocpn,3]]] Red Hat OpenShift Architecture: https://access.redhat.com/documentation/en-us/openshift_container_platform/3.7/html-single/architecture/index#node
+
+[glossary]
+== Glossary

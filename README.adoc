@@ -211,6 +211,15 @@ can also take advantage of these services to publish their own customized metric
 using the Hawkular/Prometheus APIs.
 
 <<<
+== Let's Collaborate And Be Social!
+We have a created a Gitter ORG for this workshop. Anything which comes up during the workshop which we need to share
+will all of the participants will be pasted into those channels.
+
+* https://gitter.im/rhoar-qcon-2018/Lobby[Lobby] - General discussion and posts for all attendees
+* https://gitter.im/rhoar-qcon-2018/Questions[Questions] - Ask Questions Here is we are not getting to you quickly enough
+* https://gitter.im/rhoar-qcon-2018/Feedback[Feedback] - Tell us what you liked (or didn't, S'ok we have thick skin)!
+
+<<<
 == Load A Complete DevOps Environment In Kubernetes
 
 [NOTE]

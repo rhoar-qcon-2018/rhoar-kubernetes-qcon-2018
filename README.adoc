@@ -226,6 +226,7 @@ will all of the participants will be pasted into those channels.
 ====
 While some of the process we will show here is specific to OpenShift, all of the same sorts of capabilities can
 be achieved using https://github.com/kubernetes/helm[Helm] in stock Kubernetes (Without the nice UI)
+https://blog.openshift.com/from-templates-to-openshift-helm-charts/[From OpenShift Templates To Helm Charts]
 ====
 
 === Download/Install OpenShift Client Tools

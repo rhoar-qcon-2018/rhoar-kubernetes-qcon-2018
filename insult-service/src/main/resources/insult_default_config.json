@@ -1,11 +1,11 @@
 {
   "noun": {
-    "host": "",
-    "port": 8081
+    "host": "noun-service",
+    "port": 80
   },
   "adjective": {
-    "host": "",
-    "port": 8082
+    "host": "adjective-service",
+    "port": 80
   },
   "http": {
     "address": "0.0.0.0",

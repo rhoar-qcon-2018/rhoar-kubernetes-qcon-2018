@@ -184,11 +184,19 @@ by OpenShift Container Platform. The objects to create can include anything that
 a project, for example services, build configurations, and deployment configurations. A template may also define a set
 of labels to apply to every object defined in the template.
 
-==== Source-2-Image
-A template describes a set of objects that can be parameterized and processed to produce a list of objects for creation
-by OpenShift Container Platform. The objects to create can include anything that users have permission to create within
-a project, for example services, build configurations, and deployment configurations. A template may also define a set
-of labels to apply to every object defined in the template.
+==== Source-2-Image & Build Configs
+Source-2-Image (S2I) is a concept in OpenShift which allows the Master node in the cluster to accept a GIT URL, clone the
+repository into a *_builder_* pod, inspect the contents and detect the type of project, then use the detected project
+type to automatically build that project into a container. For example, a Java project with a Maven POM file will be
+built using `mvn package` and the resulting JAR will be used configured to be the entrypoint for that container.
+
+Build Configs in OpenShift allow us to go several steps further than S2I for more complex requirements. A build config
+can customize how an S2I build is executed by specifying a `strategy` and additional parameters like the source
+container or secrets which might be needed for the build.
+
+Finally, build configs which use the `pipeline` strategy can be automatically wired into a Jenkins deployment running
+inside of the OpenShift cluster. The project will then be built via a Jenkinsfile (usually in the root of the project).
+The Jenkinsfile and pipeline strategy provide us nearly limitless control over how our builds are managed.
 
 ==== Projects
 A project is a Kubernetes namespace with additional annotations, and is the central vehicle by which access to resources
@@ -513,6 +521,217 @@ run the Spock tests:
     </plugins>
 </build>
 ----
+
+<<<
+=== Create A Jenkins Pipeline
+With the latest versions of Jenkins, the new https://jenkins.io/doc/book/pipeline/syntax/[*_declarative pipeline syntax_*]
+has become the preferred way in which to define DevOps pipelines. Let's add a *_Jenkinsfile_* to our *_insult_* service
+and discuss how it works. In later steps we will add more capabilities to the pipeline to improve our ability to
+achieve better results faster.
+
+.Jenkinsfile
+[source,groovy,subs=attributes+]
+----
+pipeline {                                                  {conum-guard-groovy} <1>
+  agent {
+    label 'jenkins-slave-mvn'                               {conum-guard-groovy} <2>
+  }
+  stages {                                                  {conum-guard-groovy} <3>
+    stage('Compile') {
+      steps {
+        sh 'mvn compile'                                    {conum-guard-groovy} <4>
+      }
+    }
+    stage('Test') {
+      steps {
+        sh 'mvn test'                                       {conum-guard-groovy} <5>
+      }
+    }
+    stage('Build Image') {
+      steps {
+        script {
+          openshift.withCluster() {                         {conum-guard-groovy} <6>
+            openshift
+                .selector('bc', 'insult-service')
+                .startBuild('--from-file=target/insult-service.jar', '--wait')
+          }
+        }
+      }
+    }
+    stage('Promote to TEST') {
+      steps {
+        script {
+          openshift.withCluster() {                         {conum-guard-groovy} <7>
+            def ciProject = openshift.project()
+            def testProject = ciProject.replaceFirst(/^labs-ci-cd/, /labs-test/)
+            openshift.withProject(testProject) {
+              openshift.tag('insult-service:latest', "${testProject}/insult-service:latest")
+            }
+          }
+        }
+      }
+    }
+    stage('Promote to DEMO') {
+      input {                                               {conum-guard-groovy} <8>
+        message "Promote service to DEMO environment?"
+        ok "PROMOTE"
+      }
+      steps {
+        script {
+          openshift.withCluster() {                         {conum-guard-groovy} <9>
+            def ciProject = openshift.project()
+            def demoProject = ciProject.replaceFirst(/^labs-ci-cd/, /labs-demo/)
+            openshift.withProject(demoProject) {
+              openshift.tag('insult-service:latest', "${demoProject}/insult-service:latest")
+            }
+          }
+        }
+      }
+    }
+  }
+}
+----
+<1> All declarative pipelines start with `pipeline` as the top-level closure
+<2> Use the `agent` block to select the appropriate Pod definition to build your project
+<3> Define different stages to track the progress of the pipeline
+<4> Compile the code using Maven
+<5> Test the code using the Maven SureFire plugin configured to use SpockFramework
+<6> Use the OpenShift plugin and DSL to trigger a Source-2-Image binary build from our resulting FatJAR
+<7> Tag the resulting container image into the `TEST` project (Thus triggering a redeployment)
+<8> Ask if the service should be promoted to the `DEMO` environment
+<9> Tag the resulting container image into the `DEMO` project (Thus triggering a redeployment)
+
+You can see that it is relatively quick and easy to chain operations together to handle the manual work of building
+and testing software before automatically deploying to a "production" environment.
+
+=== Add The Pipeline To OpenShift
+Part of our Ansible automation which was run this morning created a template for pipeline builds. If you go into your
+*_CI/CD_* project and click on *_Add to project -> Select from project_* in the top right corner of the
+OpenShift web console.
+
+.Add To Project
+[#image-add-to-project]
+[caption="Figure 4: "]
+image::pipeline_build_from_template.png[Add To Project]
+
+This will pop up a dialog which will allow you to choose the template which was created by our earlier automation.
+
+.Select A Template
+[#image-select-a-template]
+[caption="Figure 5: "]
+image::pipeline_build_from_template_2.png[Select A Template]
+
+Selecting the template and clicking *_Next_* will show us a description of the template.
+
+.Template Description
+[#image-template-description]
+[caption="Figure 6: "]
+image::pipeline_build_from_template_3.png[Template Description]
+
+Clicking *_Next_* again will prompt us to fill in the details about the project which we would like to
+build via a pipeline.
+
+.Configure Template
+[#image-provision-pipeline-from-template]
+[caption="Figure 7: "]
+image::pipeline_build_from_template_4.png[Configure Template]
+
+Clicking *_Create_* will create a new Build Config in OpenShift with a pipeline strategy.
+
+.Template Processed And Applied
+[#image-process-apply-template]
+[caption="Figure 8: "]
+image::pipeline_build_from_template_5.png[Process And Apply Template]
+
+Finally, clicking *_Close_* will return you to the overview of the CI/CD project. From there, you can navigate to
+*_Builds -> Pipelines_* to see your new pipeline build config.
+
+.View The Pipeline In OpenShift
+[#image-view-pipeline-for-insult]
+[caption="Figure 9: "]
+image::pipeline_build_from_template_6.png[Select A Template]
+
+Clicking on the *_insult-service-pipeline_* will bring us to the details page for the pipeline build.
+
+.View The Pipeline Details
+[#image-view-insult-pipeline-details]
+[caption="Figure 10: "]
+image::pipeline_build_from_template_7.png[View The Pipeline Details]
+
+Selecting *_Edit_* from the *_Actions_* menu will allow us to modify the pipeline configuration.
+
+.Modify Insult Service Pipeline
+[#image-modify-pipeline-for-insult]
+[caption="Figure 10: "]
+image::pipeline_build_from_template_8.png[Modify Insult Service Pipeline]
+
+From this screen, click on the *_Show advanced options_* link so that we can add a GitHub WebHook for
+our service.
+
+.Add WebHook For Insult Service
+[#image-insult-service-webhook]
+[caption="Figure 11: "]
+image::pipeline_build_from_template_9.png[Add WebHook For Insult Service]
+
+Click on the *_Create New WebHook Secret_* link to create a new token for use with the webhook.
+
+.Add WebHook Secret For Insult Service
+[#image-insult-service-webhook-secret]
+[caption="Figure 12: "]
+image::pipeline_build_from_template_10.png[Add WebHook Secret For Insult Service]
+
+.Select WebHook Secret For Insult Service
+[#image-select-insult-service-webhook-secret]
+[caption="Figure 13: "]
+image::pipeline_build_from_template_11.png[Select WebHook Secret For Insult Service]
+
+And now we can save this change and see the WebHook URL which we can then use in GitHub to automatically trigger builds
+when we commit code to the master branch.
+
+.Copy WebHook URL For Insult Service
+[#image-insult-service-webhook-url]
+[caption="Figure 14: "]
+image::pipeline_build_from_template_12.png[Copy WebHook URL For Insult Service]
+
+Open a web browser and navigate to your project on GitHub.
+
+.Click On Settings For Your Project
+[#image-github-insult-settings]
+[caption="Figure 15: "]
+image::github_insult_webhook_config_1.png[Click On Settings For Your Project]
+
+.Click On WebHooks
+[#image-github-insult-webhook-settings]
+[caption="Figure 16: "]
+image::github_insult_webhook_config_2.png[Click On WebHooks]
+
+.Click To Add WebHook
+[#image-github-insult-webhook-url]
+[caption="Figure 17: "]
+image::github_insult_webhook_config_3.png[Click To Add WebHook]
+
+.Authenticate If Needed
+[#image-github-insult-webhook-url]
+[caption="Figure 18: "]
+image::github_insult_webhook_config_4.png[Authenticate If Needed]
+
+.Paste WebHook URL
+[#image-github-insult-webhook-url]
+[caption="Figure 19: "]
+image::github_insult_webhook_config_5.png[Paste WebHook URL]
+
+.Disable SSL Verification
+[#image-github-insult-webhook-url]
+[caption="Figure 20: "]
+image::github_insult_webhook_config_6.png[Disable SSL Verification]
+
+.Click To Add WebHook And Activate
+[#image-github-insult-webhook-url]
+[caption="Figure 20: "]
+image::github_insult_webhook_config_7.png[Click To Add WebHook And Activate]
+
+Every time a change gets pushed to *_master_* or a pull request gets merged to *_master_*, GitHub
+will fire this webhook and thus trigger a Jenkins pipeline build in OpenShift.
 
 <<<
 === Basic Vert.x Concepts
@@ -1990,10 +2209,11 @@ add the `check` method to our Service Proxy interface:
 
 And write a test to ensure that it is working as expected.
 
-
-
 <<<
 == Quality Analysis And Project Health Using SonarQube
+
+Earlier we created a *_Jenkinsfile_* for our service so that we can automatically build our code and test it as
+we write and commit it to our source repositories.
 
 <<<
 == Security Analysis Using OWASP Zed Attack Proxy

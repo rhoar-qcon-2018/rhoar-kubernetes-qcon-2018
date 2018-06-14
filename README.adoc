@@ -706,27 +706,27 @@ image::github_insult_webhook_config_1.png[Click On Settings For Your Project]
 image::github_insult_webhook_config_2.png[Click On WebHooks]
 
 .Click To Add WebHook
-[#image-github-insult-webhook-url]
+[#image-github-insult-webhook-url-1]
 [caption="Figure 17: "]
 image::github_insult_webhook_config_3.png[Click To Add WebHook]
 
 .Authenticate If Needed
-[#image-github-insult-webhook-url]
+[#image-github-insult-webhook-url-2]
 [caption="Figure 18: "]
 image::github_insult_webhook_config_4.png[Authenticate If Needed]
 
 .Paste WebHook URL
-[#image-github-insult-webhook-url]
+[#image-github-insult-webhook-url-3]
 [caption="Figure 19: "]
 image::github_insult_webhook_config_5.png[Paste WebHook URL]
 
 .Disable SSL Verification
-[#image-github-insult-webhook-url]
+[#image-github-insult-webhook-url-4]
 [caption="Figure 20: "]
 image::github_insult_webhook_config_6.png[Disable SSL Verification]
 
 .Click To Add WebHook And Activate
-[#image-github-insult-webhook-url]
+[#image-github-insult-webhook-url-5]
 [caption="Figure 20: "]
 image::github_insult_webhook_config_7.png[Click To Add WebHook And Activate]
 
@@ -2212,15 +2212,117 @@ And write a test to ensure that it is working as expected.
 <<<
 == Quality Analysis And Project Health Using SonarQube
 
-Earlier we created a *_Jenkinsfile_* for our service so that we can automatically build our code and test it as
-we write and commit it to our source repositories.
+When you have pipeline automation for your development projects, it becomes easier to add more automated controls to
+your development processes. Whereas in a legacy development organization, each quality process you add can significantly
+slow down your development productive, when you use pipelines it is very low cost to "bake" quality into your
+development processes. Our first initiative to add quality to our code is to use https://www.sonarqube.org/[SonarQube].
+SonarQube is a "continuous inspection" tool to validate the quality of the code being written. SonarQube comes with a
+number of language bindings which a large number of rules to help us avoid common coding mistakes or anti-patterns. The
+Ansible automation which we used earlier has already deployed the SonarQube server into our CI/CD environment and wired
+it into our Jenkins CI/CD server to be used with our pipeline. Now, all that we need to do is add some lines to our
+Jenkinsfile to tell it to analyze the code with SonarQube.
+
+.insult-service/Jenkinsfile
+[source,groovy,subs=attributes+]
+----
+    ... SNIP ..
+    stage('Test') {
+      steps {
+        sh 'mvn test'
+      }
+    }
+    stage('Quality Analysis') {
+      steps {
+        script {
+          withSonarQubeEnv() {
+            sh 'mvn sonar:sonar'
+          }
+          def qualitygate = waitForQualityGate()
+          if (qualitygate.status != "OK") {
+             error "Pipeline aborted due to quality gate failure: ${qualitygate.status}"
+          }
+        }
+      }
+    }
+    stage('Build Image') {
+    ... SNIP ...
+----
+
+You will see that we have added a new `stage` to our pipeline which runs the SonarQube Maven plugin to analyze our code
+for quality issues. The Sonar Maven plugin also captures the results of our unit tests and code coverage for inclusion
+in our metrics around quality.
 
 <<<
 == Security Analysis Using OWASP Zed Attack Proxy
 
+Functional tests and static code analysis are only part of the story when we consider how we can improve resilience and
+quality in our application development. Another important consideration is *_Securiry_*. We want to evaluate our
+software systems to ensure that the applications we deploy meet our standards for security and compliance. In this case,
+we will use the tool https://www.owasp.org/index.php/OWASP_Zed_Attack_Proxy_Project[Zed Attack Proxy] or ZAP.
+
+ZAP is a tool which allows an automation tool like Selenium (Web app functional end-to-end testing) to make it's requests
+through ZAP and ZAP will monitor for well known security issues like the
+https://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project[OWASP Top 10]. ZAP can also run a *_baseline_* scan which
+will *_spider_* your web application to try to find security issues. For our purposes we will use JUST the baseline scan.
+
+.insult-service/Jenkinsfile
+[source,groovy,subs=attributes+]
+----
+    stage('Promote to TEST') {
+      steps {
+        script {
+          openshift.withCluster() {
+            def ciProject = openshift.project()
+            def testProject = ciProject.replaceFirst(/^labs-ci-cd/, /labs-test/)
+            openshift.withProject(testProject) {
+              openshift.tag('insult-service:latest', "${testProject}/insult-service:latest")
+            }
+          }
+        }
+      }
+    }
+    stage('Web Security Analysis') {
+      steps {
+        agent {
+          label "jenkins-slave-zap"
+        }
+        script {
+          def testProject = ciProject.replaceFirst(/^labs-ci-cd/, /labs-test/)
+          sh "/zap/zap-baseline.py -r baseline.html -t http://insult-service-${testProject}.apps.qcon.openshift.opentlc.com/"
+          publishHTML([
+            allowMissing: false, alwaysLinkToLastBuild: false,
+            keepAll: true, reportDir: '/zap/wrk', reportFiles: 'baseline.html',
+            reportName: 'ZAP Baseline Scan', reportTitles: 'ZAP Baseline Scan'
+          ])
+        }
+      }
+    }
+----
+
 <<<
 == Vulnerability Analysis Using OWASP Dependency Check
 
+Another tool from OWASP which can leverage is the Dependency Check. It evaluates all of our dependencies in the Maven
+POM file and checks them versus the NIST CVE list to see if there are unpatched security vulnerabilities in our
+libraries.
+
+.insult-service/Jenkinsfile
+[source,groovy,subs=attributes+]
+----
+    stage('Test') {
+      steps {
+        sh 'mvn test'
+      }
+    }
+    stage('OWASP Dependency Check') {
+      steps {
+        agent {
+          label "jenkins-slave-mvn"
+        }
+        sh 'mvn dependency-check:check'
+      }
+    }
+----
 
 [bibliography]
 == References

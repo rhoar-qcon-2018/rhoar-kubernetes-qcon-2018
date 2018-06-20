@@ -306,7 +306,7 @@ You have access to the following projects and can switch between them with 'oc p
 === Final Configurations
 
 . Log in to the Web Console for the cluster https://console.qcon2018.rhpds.redhat.com/[HERE]
-. Open your DevOps Environment labeled as `USERNAME-labs-ci-cd`
+. Open your DevOps Environment labeled as `labs-ci-cd<USERNAME>`
 . Click on the link for *SonarQube* to open it in a new tab/window
 . Log in with `admin/admin`
 . Generate a new token when prompted and copy it to your clipboard
@@ -1079,6 +1079,12 @@ can also be used in a clustered Vert.x environment to allow us to have simple in
 multiple microservices. For our workshop, we will be integrating with a few other microservices which provide the Nouns
 and Adjectives for our insults. The Noun service is implemented in NodeJS, while the Adjective service is implemented
 using Spring Boot.
+
+Something to keep in mind with using Service Proxies is that we should follow the same best practices that we use
+when creating REST APIs. Some examples:
+
+* Version your APIs, generally done by using versioned event bus addresses
+* Have a strong API contract, often by generating
 
 ==== Prepare For The Code Generator
 

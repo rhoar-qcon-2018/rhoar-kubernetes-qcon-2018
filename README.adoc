@@ -249,12 +249,9 @@ You can always download the latest OpenShift CLI tools from Github https://githu
 
 === Clone The Repositories
 
-. Open the `insult-service` repository https://github.com/rhoar-qcon-2018/insult-service[HERE]
-. Fork the repository to your own GitHub account
 . Open the `lab-infrastructure-as-code` repository https://github.com/rhoar-qcon-2018/lab-infrastructure-as-code[HERE]
 . Fork the repository to your own GitHub account
 . `git clone git@github.com:**YOUR_GITHUB_ACCOUNT_HERE**/lab-infrastructure-as-code.git`
-. `git clone git@github.com:**YOUR_GITHUB_ACCOUNT_HERE**/insult-service.git`
 . Inside of the `lab-infrastructure-as-code` project, edit the `run-remote.sh` script and input your username for the cluster
 
 .run-remote.sh
@@ -303,7 +300,7 @@ SonarQube account password: <BLANK>
 <<<
 == Create A New Vert.x Project
 . Ensure that you have Apache Maven >= 3.3.9
-. From the `insult-service` directory, run the following command
+. Create an `insult-service` directory and run the following command
 
 .Executing Fabric8 Vert.x Plugin To Start A New Project
 [source,bash]
@@ -381,6 +378,20 @@ from the initialization process, so we can put them in without versions as follo
     <artifactId>vertx-lang-js</artifactId>
     <scope>provided</scope>
 </dependency>
+----
+
+<<<
+=== Add New Project To GitHub
+Create a new repository on your GitHub account and check in your new project
+
+.Add Project To GitHub
+[source, bash]
+----
+$ cd insult-service
+$ git init
+$ git add pom.xml src
+$ git commit -am 'Initial import'
+$ git push origin master
 ----
 
 <<<

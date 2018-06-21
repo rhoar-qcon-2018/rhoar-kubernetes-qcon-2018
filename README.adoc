@@ -251,57 +251,24 @@ You can always download the latest OpenShift CLI tools from Github https://githu
 
 . Open the `insult-service` repository https://github.com/rhoar-qcon-2018/insult-service[HERE]
 . Fork the repository to your own GitHub account
-. Open the `rhoar-kubernetes-qcon-2018` repository https://github.com/rhoar-qcon-2018/rhoar-kubernetes-qcon-2018[HERE]
+. Open the `lab-infrastructure-as-code` repository https://github.com/rhoar-qcon-2018/lab-infrastructure-as-code[HERE]
 . Fork the repository to your own GitHub account
-. In your fork of the `rhoar-kubernetes-qcon-2018` repository, edit the file `.gitmodules` to update the Git URL for the `insult-service` to point to your own fork
-+
-[source,bash]
-[subs="specialcharacters,quotes"]
-----
-[submodule "ui-service"]
-	path = ui-service
-	url = git@github.com:rhoar-qcon-2018/ui-service.git
-[submodule "noun-service"]
-	path = noun-service
-	url = git@github.com:rhoar-qcon-2018/noun-service.git
-[submodule "adjective-service"]
-	path = adjective-service
-	url = git@github.com:rhoar-qcon-2018/adjective-service.git
-[submodule "insult-service"]
-	path = insult-service
-	url = git@github.com:YOUR_GITHUB_ACCOUNT_HERE/insult-service.git <1>
-[submodule "lab-infrastructure-as-code"]
-	path = lab-infrastructure-as-code
-	url = git@github.com:rhoar-qcon-2018/lab-infrastructure-as-code.git
-----
-. From your preferred git client:
-.. `git clone --recurse-submodules -j8 git@github.com:**YOUR_GITHUB_ACCOUNT_HERE**/rhoar-kubernetes-qcon-2018`
+. `git clone git@github.com:**YOUR_GITHUB_ACCOUNT_HERE**/lab-infrastructure-as-code.git`
+. `git clone git@github.com:**YOUR_GITHUB_ACCOUNT_HERE**/insult-service.git`
+. Inside of the `lab-infrastructure-as-code` project, edit the `run-remote.sh` script and input your username for the cluster
 
-=== Log In To The OpenShift Cluster
+.run-remote.sh
+[source, bash]
+----
+export USERNAME='user<NUM>'
+----
+
+=== Execute the inventory
 
 [source, bash]
 ----
-$ oc login -u YOUR_USERNAME -p YOUR_PASSWORD https://console.qcon2018.rhpds.redhat.com/
-The server uses a certificate signed by an unknown authority.
-You can bypass the certificate check, but any data you send to the server could be intercepted by others.
-Use insecure connections? (y/n): y
-
-Login successful.
-
-You have access to the following projects and can switch between them with 'oc project <projectname>':
-
-  * my-project
+$ ./run-remote.sh
 ----
-
-=== Deploy The DevOps environment using Ansible
-
-. Open a terminal which can execute Docker commands
-. Change directory to the location where you cloned the repositories
-. Change into the `lab-infrastructure-as-code` subdirectory
-. Execute the `run` script
-.. On Windows, use `run.bat`
-.. On *NIX, use `run.sh`
-. Wait a few minutes for the environment to finish provisioning
 
 === Final Configurations
 

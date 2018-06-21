@@ -251,7 +251,7 @@ You can always download the latest OpenShift CLI tools from Github https://githu
 
 . Open the `lab-infrastructure-as-code` repository https://github.com/rhoar-qcon-2018/lab-infrastructure-as-code[HERE]
 . Fork the repository to your own GitHub account
-. `git clone git@github.com:**YOUR_GITHUB_ACCOUNT_HERE**/lab-infrastructure-as-code.git`
+. `git clone https://github.com/**YOUR_GITHUB_ACCOUNT_HERE**/lab-infrastructure-as-code.git`
 . Inside of the `lab-infrastructure-as-code` project, edit the `run-remote.sh` script and input your username for the cluster
 
 .run-remote.sh

@@ -269,7 +269,7 @@ $ ./run-remote.sh
 
 === Final Configurations
 
-. Log in to the Web Console for the cluster https://master.qcon.rhpds.redhat.com/[HERE]
+. Log in to the Web Console for the cluster https://master.qcon.openshift.opentlc.com/[HERE]
 . Open your DevOps Environment labeled as `labs-ci-cd<USERNAME>`
 . Click on the link for *SonarQube* to open it in a new tab/window
 . Log in with `admin/admin`

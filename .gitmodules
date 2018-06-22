@@ -1,6 +1,3 @@
-[submodule "adjective-service"]
-	path = adjective-service
-	url = git@github.com:rhoar-qcon-2018/adjective-service.git
 [submodule "insult-service"]
 	path = insult-service
 	url = git@github.com:rhoar-qcon-2018/insult-service.git

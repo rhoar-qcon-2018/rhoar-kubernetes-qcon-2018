@@ -1,0 +1,18 @@
+[submodule "insult-service"]
+	path = insult-service
+	url = https://github.com/rhoar-qcon-2018/insult-service.git
+[submodule "ui-service"]
+	path = ui-service
+	url = https://github.com/rhoar-qcon-2018/ui-service.git
+[submodule "lab-infrastructure-as-code"]
+	path = lab-infrastructure-as-code
+	url = https://github.com/rhoar-qcon-2018/lab-infrastructure-as-code.git
+[submodule "kafka-service"]
+	path = kafka-service
+	url = https://github.com/rhoar-qcon-2018/kafka-service.git
+[submodule "adjective-service"]
+	path = adjective-service
+	url = https://github.com/rhoar-qcon-2018/reactive-k8s-adjective-service.git
+[submodule "noun-service"]
+	path = noun-service
+	url = https://github.com/rhoar-qcon-2018/reactive-k8s-noun-service.git

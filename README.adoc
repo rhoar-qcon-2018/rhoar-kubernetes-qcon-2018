@@ -1276,7 +1276,7 @@ define a `SimulationSource`.
 
     // -- SNIP --
 ----
-<1> The first simulation is the happy path where a good response is send by both services
+<1> The first simulation is the happy path where a good response is sent by both services
 <2> The second simulation has the noun service return a 5XX error
 <3> The third simulation returns a 2XX response, but after a delay (This will be used later to test circuit breakers)
 <4> In the `setupSpec()` method, we instantiate the Hoverfly proxy service and extract the proxy settings

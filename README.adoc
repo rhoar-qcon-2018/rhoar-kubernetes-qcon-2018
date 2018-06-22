@@ -1171,7 +1171,7 @@ class InsultServiceImplSpec extends Specification {
 }
 ----
 
-That's the extend of the boilerplate required for writing tests. Spock also supports pre-operations like:
+That's the extent of the boilerplate required for writing tests. Spock also supports pre-operations like:
 
 * `setup()` - A method run before EACH TEST
 * `setupSpec()` - A method run before the entire test class

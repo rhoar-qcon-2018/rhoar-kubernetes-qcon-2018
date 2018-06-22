@@ -212,8 +212,8 @@ OpenShift implements a number of security enhancements over stock Kubernetes.
 * Improved Roles, Groups, User management
 * Integration with Certificate Authorities and Identity Management
 
-==== Metrics (Prometheus/Hawkular/Heapster)
-OpenShift can be deployed along with Prometheus and Hawkular metrics tracking. When deployed these services provide
+==== Metrics & Monitoring (Prometheus/Hawkular/Heapster)
+OpenShift can be deployed along with Prometheus monitoring git stand Hawkular metrics tracking. When deployed these services provide
 continuous monitoring of basic application information like latency, CPU utilization, and memory consumption. Developers
 can also take advantage of these services to publish their own customized metrics to the services from their applications
 using the Hawkular/Prometheus APIs.

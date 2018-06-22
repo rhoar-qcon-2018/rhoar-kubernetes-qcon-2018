@@ -1,6 +1,3 @@
-[submodule "ui-service"]
-	path = ui-service
-	url = git@github.com:rhoar-qcon-2018/ui-service.git
 [submodule "noun-service"]
 	path = noun-service
 	url = git@github.com:rhoar-qcon-2018/noun-service.git

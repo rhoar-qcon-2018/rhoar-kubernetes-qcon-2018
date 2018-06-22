@@ -1,3 +1,0 @@
-[submodule "kafka-service"]
-	path = kafka-service
-	url = git@github.com:rhoar-qcon-2018/kafka-service.git

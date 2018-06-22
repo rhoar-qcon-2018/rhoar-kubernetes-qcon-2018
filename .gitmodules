@@ -1,6 +1,3 @@
-[submodule "insult-service"]
-	path = insult-service
-	url = https://github.com/rhoar-qcon-2018/insult-service.git
 [submodule "ui-service"]
 	path = ui-service
 	url = https://github.com/rhoar-qcon-2018/ui-service.git

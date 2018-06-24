@@ -819,6 +819,9 @@ deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration
 Another best practice is that we should practice "test first" development. To further that concept, let's start
 by writing a failing test for the feature we intend to implement.
 
+Inside of the `insult-service` project, create the directory path `src/test/groovy/com/redhat/qcon`. Inside of that
+directory, we will create the following file.
+
 .src/test/groovy/com/redhat/qcon/MainVerticleSpec.groovy
 [source,groovy,subs=attributes+]
 ----
@@ -832,28 +835,28 @@ import spock.util.concurrent.AsyncConditions
 class MainVerticleSpec extends Specification {
 
     def 'Test Vert.x configuration loading'() {
-            given: 'An instance of Vert.x'  {conum-guard-groovy} <1>
+            given: 'An instance of Vert.x'                      {conum-guard-groovy} <1>
                 def vertx = Vertx.vertx()
-            and: 'An instance of a Vert.x Future'  {conum-guard-groovy} <2>
+            and: 'An instance of a Vert.x Future'               {conum-guard-groovy} <2>
                 def fut = Future.future()
             and: '''An instance of Spock's AsyncConditions'''
-                def async = new AsyncConditions(1)          {conum-guard-groovy} <4>
+                def async = new AsyncConditions(1)              {conum-guard-groovy} <4>
 
-            when: 'We attempt to deploy the main Verticle'  {conum-guard-groovy} <3>
+            when: 'We attempt to deploy the main Verticle'      {conum-guard-groovy} <3>
                 vertx.deployVerticle(new MainVerticle(), fut.completer())
 
             then: 'Expect that the correct configuration is found and loaded'
                 fut.setHandler({ res ->
-                    async.evaluate {                                        {conum-guard-groovy} <5>
+                    async.evaluate {                            {conum-guard-groovy} <5>
                         def config = vertx.getOrCreateContext().config()
-                        assert res.succeeded() {conum-guard-groovy} <6>
-                        assert config.hasProperty('insult') {conum-guard-groovy} <7>
-                        assert config.hasProperty('adjective') {conum-guard-groovy} <8>
-                        assert config.hasProperty('http') {conum-guard-groovy} <9>
+                        assert res.succeeded()                  {conum-guard-groovy} <6>
+                        assert config.hasProperty('insult')     {conum-guard-groovy} <7>
+                        assert config.hasProperty('adjective')  {conum-guard-groovy} <8>
+                        assert config.hasProperty('http')       {conum-guard-groovy} <9>
                     }
                 })
 
-            cleanup: 'Await the async operations'  {conum-guard-groovy} <10>
+            cleanup: 'Await the async operations'               {conum-guard-groovy} <10>
                 async.await(3600)
                 vertx.close()
         }

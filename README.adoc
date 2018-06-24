@@ -1435,9 +1435,9 @@ public class InsultServiceImpl implements InsultService {
 === Implement REST clients
 Vert.x provides both a high-level and low-level method of interacting with HTTP servers. In the core Vert.x package,
 there is `vertx.createHttpClient()`, and it allows for very customizable handling of making requests to HTTP servers.
-For more simple interactions with HTTP servers, the Vert.x team provides the `vertx-web-client` library. For interacting
-with the other microservices via REST, we will use the web client. The simple case of using the web client is
-demonstrated below:
+For more simple interactions with HTTP servers, the Vert.x team has provided the `vertx-web-client` library. For
+interacting with the other microservices via REST, we will use the web client. The simple case of using the web client
+is demonstrated below:
 
 ==== Vert.x Web Client
 .Web Client Example
@@ -1445,12 +1445,10 @@ demonstrated below:
 ----
 WebClientOptions opts = new WebClientOptions()
                                 .setLogActivity(true)
-                                .setDefaultHost("localhost")
-                                .setDefaultPort(8080)
                                 .setProxyOptions(proxyOptions);
 WebClient client = WebClient.create(vertx, opts);
 
-client.get("/some/path")
+client.get(8080, "localhost", "/some/path")
         .timeout(3000)
         .rxSend()
         .map(resp -> {                        // Map 4XX and 5XX responses to Exceptions
@@ -1464,18 +1462,17 @@ client.get("/some/path")
             // Handle successful JSON response body
         },
         e -> {
-            // Handle exceptions
+            // Handle error
         });
 ----
 
 This is pretty concise code, but it is not terribly readable. The in-line lambdas are also difficult to test in
-isolation. Instead, we can extract those into void stateless methods which are simple to test and read.
+isolation. Instead, we can extract those into stateless methods which are simple to test and read.
 
 .Web Client Example
 [source,java,subs=attributes+]
 ----
-private HttpResponse<Buffer> mapErrors(HttpResponse<Buffer> resp)
-                                                        throws HttpResponseException {
+private HttpResponse<Buffer> mapErrors(HttpResponse<Buffer> resp) throws HttpResponseException {
     // Map 4XX and 5XX responses to Exceptions
     if (resp.statusCode()>=400) {
         throw new HttpResponseException(resp.statusCode(), resp.statusMessage());
@@ -1486,22 +1483,20 @@ private HttpResponse<Buffer> mapErrors(HttpResponse<Buffer> resp)
 private void example(Future<JsonObject> httpResponse) {
     WebClientOptions opts = new WebClientOptions()
                                     .setLogActivity(true)
-                                    .setDefaultHost("localhost")
-                                    .setDefaultPort(8080)
                                     .setProxyOptions(proxyOptions);
     WebClient client = WebClient.create(vertx, opts);
 
-    client.get("/some/path")
+    client.get(8080, "localhost", "/some/path")
             .timeout(3000)
             .rxSend()
             .map(this::mapErrors)
             .map(HttpResponse::bodyAsJsonObject)
-            .doOnError(httpResponse::fail)
-            .subscribe(httpResponse::complete);
+            .subscribe(httpResponse::complete, httpResponse::fail);
 }
 ----
 
-This code is simple to test and easier to read. As we go forward, this is the pattern I will advocate.
+This code is simple to test and easier to read. As we go forward, this is the pattern I will recommend whenever
+callbacks are needed.
 
 ==== Implementing the Insult Service Using Web Client
 Now, let's implement some methods so that we can make requests to our associated microservices and retrieve the results.
@@ -1511,17 +1506,38 @@ Now, let's implement some methods so that we can make requests to our associated
 ----
 package com.redhat.qcon.insult.services;
 
+import io.reactivex.Maybe;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.ProxyOptions;
+import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.reactivex.core.CompositeFuture;
 import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.core.buffer.Buffer;
+import io.vertx.reactivex.ext.web.client.HttpResponse;
+import io.vertx.reactivex.ext.web.client.WebClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static java.lang.String.format;
-import io.vertx.reactivex.core.Future;
 
 public class InsultServiceImpl implements InsultService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(InsultServiceImpl.class);
+
+    private static final int HTTP_CLIENT_TIMEOUT = 1000;
+
     Vertx vertx;
-    WebClient nounClient, adjClient;
+    WebClient webClient;
+    JsonObject config;
+
+    private final String nounHost;
+    private final int nounPort;
+    private final String adjHost;
+    private final int adjPort;
 
     /**
      * Default constructor
@@ -1529,18 +1545,22 @@ public class InsultServiceImpl implements InsultService {
      * @param config The {@link JsonObject} configuration for this service
      */
     public InsultServiceImpl(io.vertx.core.Vertx vertx, JsonObject config) {
+        this.config = config;
 
-        kafka = KafkaService.createProxy(Vertx.newInstance(vertx), "kafka.service");
+        nounHost = config.getJsonObject("noun").getString("host");
+        nounPort = config.getJsonObject("noun").getInteger("port");
 
-        JsonObject nounConfig = config.getJsonObject("noun");
-        JsonObject adjConfig = config.getJsonObject("adjective");
+        adjHost = config.getJsonObject("adjective").getString("host");
+        adjPort = config.getJsonObject("adjective").getInteger("port");
+
         this.vertx = Vertx.newInstance(vertx);
-        WebClientOptions nounClientOpts = new WebClientOptions(nounConfig)
-                .setLogActivity(true);
-        WebClientOptions adjClientOpts = new WebClientOptions(adjConfig)
-                .setLogActivity(true);
-        nounClient = WebClient.create(this.vertx, nounClientOpts);
-        adjClient = WebClient.create(this.vertx, adjClientOpts);
+
+        WebClientOptions clientOpts = new WebClientOptions()
+                .setLogActivity(false);
+        if (config.containsKey("proxyOptions")) {
+            clientOpts.setProxyOptions(new ProxyOptions(config.getJsonObject("proxyOptions")));
+        }
+        webClient = WebClient.create(this.vertx, clientOpts);
     }
 
     /**
@@ -1549,18 +1569,18 @@ public class InsultServiceImpl implements InsultService {
      */
     @Override
     public void getREST(Handler<AsyncResult<JsonObject>> insultGetHandler) {
-        throw new Exception("Not Implemented");
+        insultGetHandler.handle(Future.failedFuture(new Exception("Not Implemented")));
     }
 
     /**
-     * The the {@link KafkaService} event bus proxy to make calls to the
-     * Kafka microservice
+     * The the {@link KafkaService} event bus proxy to make calls to the Kafka
+     * microservice
      * @param insult An insult made up of 2 adjectives and a noun
      * @param handler A handler to be called
      */
     @Override
-    public InsultService publish(JsonObject insult, Handler<AsyncResult<Void>> handler) {
-        throw new Exception("Not Implemented");
+    public void publish(Handler<AsyncResult<JsonObject>> handler) {
+        insultGetHandler.handle(Future.failedFuture(new Exception("Not Implemented")));
     }
 
     /**
@@ -1568,15 +1588,17 @@ public class InsultServiceImpl implements InsultService {
      * processing and trigger an error handler
      * @param r The {@link HttpResponse} to be checked
      * @return The same as the input if the response code is 2XX
-     * @throws Exception If the {@link HttpResponse} code is 4XX or 5XX
      */
-    private static final HttpResponse<Buffer> mapStatusToError(HttpResponse<Buffer> r)
-                                                                        throws Exception {
+    private static final Maybe<HttpResponse<Buffer>> mapStatusToError(HttpResponse<Buffer> r) {
         if (r.statusCode()>=400) {
-            throw new Exception(format("%d: %s\n%s", r.statusCode(),
-                                r.statusMessage(), r.bodyAsString()));
+            String errorMessage = format("%d: %s\n%s",
+                    r.statusCode(),
+                    r.statusMessage(),
+                    r.bodyAsString());
+            Exception clientException = new Exception(errorMessage);
+            return Maybe.error(clientException);
         } else {
-            return r;
+            return Maybe.just(r);
         }
     }
 
@@ -1588,7 +1610,7 @@ public class InsultServiceImpl implements InsultService {
      */
     Future<JsonObject> getNoun() {
         Future<JsonObject> fut = Future.future();
-        nounClient.get("/api/v1/noun")
+        nounClient.get(nounPort, nounHost, "/api/v1/noun")
                 .timeout(3000)
                 .rxSend()
                 .map(InsultServiceImpl::mapStatusToError)
@@ -1606,7 +1628,7 @@ public class InsultServiceImpl implements InsultService {
      */
     Future<JsonObject> getAdjective() {
         Future<JsonObject> fut = Future.future();
-        adjClient.get("/api/v1/adjective")
+        adjClient.get(adjPort, adjHost, "/api/v1/adjective")
                 .timeout(3000)
                 .rxSend()
                 .map(InsultServiceImpl::mapStatusToError)
@@ -1619,7 +1641,8 @@ public class InsultServiceImpl implements InsultService {
 ----
 
 We have defined some new methods which allow us to make HTTP requests and return `Future`s for asynchronous interaction.
-These futures can then be composed in another method:
+These futures can then be *_composed_* in another method using *_CompositeFuture_*. CompositeFuture allows us to have
+multiple operations run asynchronously and in parallel.
 
 .src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
@@ -1627,34 +1650,33 @@ These futures can then be composed in another method:
     // -- SNIP --
 
     /**
-     * When the {@link CompositeFuture} is failed, throws an exception in order to
-     * interrups the RxJava stream processing
+     * When the {@link CompositeFuture} is failed, throws an exception in order to interrups the RxJava stream processing
      * @param res The {@link CompositeFuture} to be processed
-     * @return Same as the input as long as the {@link CompositeFuture} was succeeded
-     * @throws Exception If the {@link CompositeFuture} is failed
+     * @return The same as the input if the {@link CompositeFuture} was succeeded
+     * @throws ServiceException if any of the futures failed
      */
-    private static final CompositeFuture mapResultToError(CompositeFuture res)
-                                                                    throws Exception {
+    static final Maybe<CompositeFuture> mapResultToError(CompositeFuture res) throws ServiceException {
         if (res.succeeded()) {
-            return res;
+            return Maybe.just(res);
+        } else {
+            for (int x=0; x<3; x++) {
+                LOG.error("Failed to request insult components", res.cause(x));
+            }
+            throw new ServiceException(1, res.cause().getLocalizedMessage());
         }
-        throw new Exception(res.cause());
     }
 
     /**
-     * Take results of {@link CompositeFuture} and return a composed {@link JsonObject}
-     * containing the insult components
-     * @param cf An instance of {@link CompositeFuture} which MUST be succeeded,
-     *           otherwise it would have been filtered
+     * Take results of {@link CompositeFuture} and return a composed {@link JsonObject} containing the insult components
+     * @param cf An instance of {@link CompositeFuture} which MUST be succeeded, otherwise it would have been filtered
      * @return A {@link JsonObject} containing a noun and an array of adjectives.
      */
-    private static AsyncResult<JsonObject> buildInsult(CompositeFuture cf) {
+    private static JsonObject buildInsult(CompositeFuture cf) {
         JsonObject insult = new JsonObject();
         JsonArray adjectives = new JsonArray();
 
-        // Because there is no garanteed order of the returned futures, we need to parse
-        the results
-        for (int i=0; i<=cf.size(); i++) {
+        // Because there is no garanteed order of the returned futures, we need to parse the results
+        for (int i=0; i<cf.size(); i++) {
             JsonObject item = cf.resultAt(i);
             if (item.containsKey("adjective")) {
                 adjectives.add(item.getString("adjective"));
@@ -1662,9 +1684,10 @@ These futures can then be composed in another method:
                 insult.put("noun", item.getString("noun"));
             }
         }
-        insult.put("adjectives", adjectives);
+        insult.put("adj1", adjectives.getString(0));
+        insult.put("adj2", adjectives.getString(1));
 
-        return Future.succeededFuture(insult);
+        return insult;
     }
 
     /**
@@ -1674,20 +1697,27 @@ These futures can then be composed in another method:
     @Override
     public void getREST(Handler<AsyncResult<JsonObject>> insultGetHandler) {
         // Request 2 adjectives and a noun in parallel, then handle the results
-        CompositeFuture.all(getNoun(), getAdjective(), getAdjective())
-                .rxSetHandler()
-                .map(InsultServiceImpl::mapResultToError)   {conum-guard-groovy} <1>
-                .map(InsultServiceImpl::buildInsult)        {conum-guard-groovy} <2>
-                .onErrorReturn(Future::failedFuture)        {conum-guard-groovy} <3>
-                .subscribe(insultGetHandler::handle);       {conum-guard-groovy} <4>
+        LOG.info("Received request");
+        Future<JsonObject> fut = Future.future();
+        fut.setHandler(insultGetHandler);
+        CompositeFuture
+        .all(getNoun(), getAdjective(), getAdjective())         {conum-guard-groovy} <1>
+            .rxSetHandler()
+            .flatMapMaybe(InsultServiceImpl::mapResultToError)  {conum-guard-groovy} <2>
+            .map(InsultServiceImpl::buildInsult)                {conum-guard-groovy} <3>
+            .subscribe(
+                fut::complete,                                  {conum-guard-groovy} <4>
+                fut::fail                                       {conum-guard-groovy} <5>
+            );
     }
 
     -- SNIP --
 ----
-<1> Map errors to an exception
-<2> Combine the 3 results into a single JSON object
-<3> When an exception happens, map it to a failed future
+<1> Launch 3 parallel REST requests
+<2> Map errors to an exception
+<3> Combine the 3 results into a single JSON object
 <4> Map successful JSON to a succeeded future
+<5> When an exception happens, map it to a failed future
 
 `CompositeFuture.all(...)` tells Vert.x to run ALL of the specified methods and return when ANY of them fails or ALL
 of them succeed. All of the methods are run non-blocking and potentially in parallel. In this case, we request 2

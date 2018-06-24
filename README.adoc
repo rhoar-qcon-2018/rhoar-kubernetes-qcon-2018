@@ -2063,6 +2063,9 @@ The first step is to create an instance of the OpenAPI3RouterFactory:
 .src/main/java/com/redhat/qcon/insult/MainVerticle.java
 [source,java,subs=attributes+]
 ----
+    public static final String INSULT_SERVICE_ADDRESS = "insult.service";
+    public static final String INSULT_API_SPEC_YAML = "/insult-api-spec.yaml";
+
     /**
      * Begin the creation of the {@link OpenAPI3RouterFactory}
      *

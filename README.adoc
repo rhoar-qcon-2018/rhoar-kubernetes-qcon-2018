@@ -876,9 +876,10 @@ class MainVerticleSpec extends Specification {
 Spock tests are written using a format known as Gherkin. Gherkin formats tests as given-when-then. Spock also has
 a format for writing data-driven tests which we will use and explain later.
 
-Now that we have written our test, here's how I would implement the feature code.
+Now that we have written our test, here's how I would implement the feature code. Inside of the `src/main/java` directory
+of our `insult-service` project; we'll create a new package directory `src/main/java/com/redhat/qcon/insult/services`.
 
-.Implementing Kubernetes ConfigMap Support
+.MainVerticle.java
 [source,java,subs=attributes+]
 ----
 package com.redhat.qcon;

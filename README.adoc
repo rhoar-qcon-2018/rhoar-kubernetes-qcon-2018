@@ -2050,10 +2050,6 @@ recommended that you paste the code above into that editor to view the API speci
 ====
 
 <<<
-=== Write Tests For The MainVerticle
-
-
-<<<
 === Adding The OpenAPI Router Factory To The MainVerticle
 
 Earlier, we created the skeleton of the `MainVerticle` class. Now we will expand that
@@ -2069,23 +2065,26 @@ The first step is to create an instance of the OpenAPI3RouterFactory:
 ----
     /**
      * Begin the creation of the {@link OpenAPI3RouterFactory}
+     *
      * @param config The config loaded via the {@link ConfigRetriever}
-     * @return An {@link OpenAPI3RouterFactory} {@link Future} to be used to complete
-     *         the next Async step
+     * @return An {@link OpenAPI3RouterFactory} {@link Future} to be used to
+     *         complete the next Async step
      */
     private Maybe<OpenAPI3RouterFactory> provisionRouter(JsonObject config) {
-        // Merge the loaded configuration into the config for this Verticle
-        config().mergeIn(config);
+            // Merge the loaded configuration into the config for this Verticle
+            loadedConfig = config().mergeIn(config);
 
-        // Instantiate the Insult Service and bind it to the event bus
-        InsultServiceImpl nonRx = new InsultServiceImpl(vertx.getDelegate(), config);
-        new ServiceBinder(vertx.getDelegate())
-                .setAddress("insult.service")
-                .register(com.redhat.qcon.insult.services.InsultService.class, nonRx);
+            if (LOG.isInfoEnabled()) {
+                    LOG.info("Config Loaded: {}", loadedConfig.encodePrettily());
+            }
 
-        // Create the OpenAPI3RouterFactory using the API specification YAML file
-        return OpenAPI3RouterFactory.rxCreate(vertx, "/insult-api-spec.yaml")
-                .toMaybe();
+            // Instantiate the Insult Service and bind it to the event bus
+            InsultServiceImpl nonRx = new InsultServiceImpl(vertx.getDelegate(), loadedConfig);
+            new ServiceBinder(vertx.getDelegate()).setAddress(INSULT_SERVICE_ADDRESS)
+                            .register(com.redhat.qcon.insult.services.InsultService.class, nonRx);
+
+            // Create the OpenAPI3RouterFactory using the API specification YAML file
+            return OpenAPI3RouterFactory.rxCreate(vertx, INSULT_API_SPEC_YAML).toMaybe();
     }
 ----
 
@@ -2101,43 +2100,61 @@ service proxy interfaces for the front-end web application.
 ----
     /**
      * Wire the {@link OpenAPI3RouterFactory} into the HTTP Server
+     *
      * @param factory The {@link OpenAPI3RouterFactory} created in the previous step
      * @return An {@link HttpServer} if successful
      */
     Maybe<HttpServer> provisionHttpServer(OpenAPI3RouterFactory factory) {
-        // Configure the HTTP Server options
-        // - Listen on port 8080 on all interfaces using HTTP2 protocol
-        HttpServerOptions httpOpts = new HttpServerOptions().setUseAlpn(true)
-                .setHost("0.0.0.0")
-                .setPort(8080)
-                .setLogActivity(true);
+            // Configure the HTTP Server options
+            // - Listen on port 8080 on all interfaces using HTTP2 protocol
+            HttpServerOptions httpOpts = new HttpServerOptions()
+                            .setHost(loadedConfig.getJsonObject("http").getString("address"))
+                            .setPort(loadedConfig.getJsonObject("http").getInteger("port")).setReuseAddress(true)
+                            .setSoLinger(0).setLogActivity(true);
 
-        // Create a proxy instance to access the InsultService via Rx'ified API
-        InsultService service = new ServiceProxyBuilder(vertx.getDelegate())
-                                        .setAddress("insult.service")
-                                        .build(InsultService.class);
+            InsultService service = InsultService
+                            .newInstance(new ServiceProxyBuilder(vertx.getDelegate()).setAddress(INSULT_SERVICE_ADDRESS)
+                                            .build(com.redhat.qcon.insult.services.InsultService.class));
 
-        // Map out OpenAPI3 route to our Service Proxy implementation
-        factory.addHandlerByOperationId("getInsult",
-            ctx -> service.rxGetREST().toMaybe()
-                      .doOnError(e -> errorHandler(ctx, e))
-                      .subscribe(json -> sendResult(ctx, json)));
+            // Map out OpenAPI3 route to our Service Proxy implementation
+            factory.addHandlerByOperationId("getInsult", ctx -> service.rxGetREST()
+                            .doOnError(e -> errorHandler(ctx, e)).subscribe(json -> sendResult(ctx, json)));
 
-        BridgeOptions bOpts = new BridgeOptions()
-                .addInboundPermitted(new PermittedOptions().setAddress("insult.service"))
-                .addOutboundPermitted(new PermittedOptions().setAddress("kafka.service"))
-                .addOutboundPermitted(new PermittedOptions().setAddress("insult.service"));
+            // Map out OpenAPI3 route to our Service Proxy implementation
+            factory.addHandlerByOperationId("health", ctx -> service.rxCheck()
+                                                                    .subscribe(
+                                                                            json -> sendResult(ctx, json),
+                                                                            e -> errorHandler(ctx, e)
+                                                                    )
+                                            );
 
-        SockJSHandler sockHandler = SockJSHandler.create(vertx).bridge(bOpts);
+            Router api = factory.getRouter();
 
-        Router router = factory.getRouter();
+            Router root = Router.router(vertx);
 
-        router.route("/eventbus").handler(sockHandler);
+            CorsHandler corsHandler = CorsHandler.create(".*").allowedHeader("Access-Control-Request-Method")
+                            .allowedHeader("Access-Control-Allow-Origin")
+                            .allowedHeader("Access-Control-Allow-Headers").allowedHeader("Content-Type")
+                            .allowedMethod(HttpMethod.GET).allowedMethod(HttpMethod.POST)
+                            .allowedMethod(HttpMethod.HEAD).allowedMethod(HttpMethod.PUT)
+                            .allowedMethod(HttpMethod.OPTIONS).allowedMethod(HttpMethod.CONNECT);
 
-        return vertx.createHttpServer(httpOpts)
-                    .requestHandler(router::accept)
-                    .rxListen()
-                    .toMaybe();
+            root.route().order(0).handler(corsHandler);
+            api.route().order(0).handler(corsHandler);
+
+            root.mountSubRouter("/api/v1", api);
+
+            BridgeOptions bOpts = new BridgeOptions()
+                            .addInboundPermitted(new PermittedOptions().setAddress("insult.service"))
+                            .addOutboundPermitted(new PermittedOptions().setAddress("kafka.service"))
+                            .addOutboundPermitted(new PermittedOptions().setAddress("insult.service"))
+                            .addOutboundPermitted(new PermittedOptions().setAddress(FAVORITES_EB_ADDRESS));
+
+            SockJSHandler sockHandler = SockJSHandler.create(vertx).bridge(bOpts);
+
+            root.route("/eventbus/*").handler(sockHandler);
+
+            return vertx.createHttpServer(httpOpts).requestHandler(root::accept).rxListen().toMaybe();
     }
 ----
 

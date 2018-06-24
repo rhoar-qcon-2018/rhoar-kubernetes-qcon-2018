@@ -1415,7 +1415,7 @@ public class InsultServiceImpl implements InsultService {
      */
     @Override
     public void getREST(Handler<AsyncResult<JsonObject>> insultGetHandler) {
-        throw new Exception("Not Implemented");
+        insultGetHandler.handle(Future.failedFuture(new Exception("Not Implemented")));
     }
 
     /**
@@ -1425,8 +1425,8 @@ public class InsultServiceImpl implements InsultService {
      * @param handler A handler to be called
      */
     @Override
-    public InsultService publish(JsonObject insult, Handler<AsyncResult<Void>> handler) {
-        throw new Exception("Not Implemented");
+    public void publish(Handler<AsyncResult<JsonObject>> handler) {
+        insultGetHandler.handle(Future.failedFuture(new Exception("Not Implemented")));
     }
 }
 ----

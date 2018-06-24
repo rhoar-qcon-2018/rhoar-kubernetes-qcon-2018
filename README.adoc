@@ -1824,45 +1824,32 @@ we expect a circuit breaker result instead of a normal success response.
 [source,java,subs=attributes+]
 ----
     static final SimulationSource GET_RESP_THREE = dsl(
-            service('localhost')
+            service('noun-service')
                     .get('/api/v1/noun')
                     .willReturn(success(NOUN_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())
-                                    .withDelay(1, TimeUnit.SECONDS)),
-            service('localhost')
+                                    .withDelay(10, TimeUnit.SECONDS)),
+            service('adjective-service')
                     .get("/api/v1/adjective")
                     .willReturn(success(ADJ_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())))
 
     static final SimulationSource GET_RESP_FOUR = dsl(
-            service('localhost')
+            service('noun-service')
                     .get('/api/v1/noun')
                     .willReturn(success(NOUN_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())),
-            service('localhost')
+            service('adjective-service')
                     .get("/api/v1/adjective")
                     .willReturn(success(ADJ_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())
-                                    .withDelay(1, TimeUnit.SECONDS)))
+                                    .withDelay(10, TimeUnit.SECONDS)))
+
+    // -- SNIP --
 
     @Unroll
-    def 'Test getting a noun: #description'() {
-        setup: 'Http Client Config to work with Hoverfly'
-            def httpClientConfig = new JsonObject()
-                    .put('noun',
-                    new JsonObject().put('host', 'localhost')
-                            .put('ssl', false)
-                            .put('port', 80)
-                            .put('proxyOptions', proxyOptions)
-            )
-                    .put('adjective',
-                    new JsonObject().put('host', 'localhost')
-                            .put('ssl', false)
-                            .put('port', 80)
-                            .put('proxyOptions', proxyOptions)
-            )
-
-        and: 'Create the service under test'
+    def 'Test getting an insult: #description'() {
+        setup: 'Create the service under test'
             InsultServiceImpl underTest = new InsultServiceImpl(vertx, httpClientConfig)
 
         and: 'AsyncConditions'
@@ -1876,20 +1863,23 @@ we expect a circuit breaker result instead of a normal success response.
                 conds.evaluate {
                     assert succeeded == res.succeeded()
                     def body = res?.result()
-                    assert body?.getJsonArray('adjectives')?.getAt(0) == adjective
+                    assert body?.getString('adj1') == adjective
+                    assert body?.getString('adj2') == adjective
                     assert body?.getString('noun') == noun
                 }
             })
 
         expect: 'The appropriate response to REST calls'
-        conds.await(10)
+            conds.await(15)
+            hoverfly.resetJournal()
+            hoverfly.reset()
 
         where: 'The following data is applied'
-            simulation         | description    || succeeded | adjective   | noun
-            GET_RESP_ONE   | 'Happy path'   || true      | 'adjective' | 'noun'
-            GET_RESP_TWO   | 'Server error' || false     | null        | null
-            GET_RESP_THREE | 'Slow reply'   || true      | 'adjective' | '[timeout]'
-            GET_RESP_FOUR  | 'Slow reply'   || true      | '[timeout]' | 'noun'
+            simulation     | description       || succeeded | adjective   | noun
+            GET_RESP_ONE   | 'Happy path'      || true      | 'adjective' | 'noun'
+            GET_RESP_TWO   | 'Server error'    || true      | '[failure]' | '[failure]'
+            GET_RESP_THREE | 'Slow adj reply'  || true      | 'adjective' | '[failure]'
+            GET_RESP_FOUR  | 'Slow noun reply' || true      | '[failure]' | 'noun'
     }
 ----
 
@@ -1911,36 +1901,44 @@ method which calls the adjective service.
      * @param config The {@link JsonObject} configuration for this service
      */
     public InsultServiceImpl(io.vertx.core.Vertx vertx, JsonObject config) {
+        this.config = config;
 
         kafka = KafkaService.createProxy(Vertx.newInstance(vertx), "kafka.service");
 
-        JsonObject nounConfig = config.getJsonObject("noun");
-        JsonObject adjConfig = config.getJsonObject("adjective");
+        nounHost = config.getJsonObject("noun").getString("host");
+        nounPort = config.getJsonObject("noun").getInteger("port");
+
+        adjHost = config.getJsonObject("adjective").getString("host");
+        adjPort = config.getJsonObject("adjective").getInteger("port");
+
         this.vertx = Vertx.newInstance(vertx);
-        WebClientOptions nounClientOpts = new WebClientOptions(nounConfig)
-                .setLogActivity(true);
-        WebClientOptions adjClientOpts = new WebClientOptions(adjConfig)
-                .setLogActivity(true);
-        nounClient = WebClient.create(this.vertx, nounClientOpts);
-        adjClient = WebClient.create(this.vertx, adjClientOpts);
-                        .fallback(t -> new JsonObject().put("noun", "[open]"))
+
+        WebClientOptions clientOpts = new WebClientOptions()
+                .setLogActivity(false);
+        if (config.containsKey("proxyOptions")) {
+            clientOpts.setProxyOptions(new ProxyOptions(config.getJsonObject("proxyOptions")));
+        }
+        webClient = WebClient.create(this.vertx, clientOpts);
 
         CircuitBreakerOptions breakerOpts = new CircuitBreakerOptions()
                                                     .setFallbackOnFailure(true)
-                                                    .setMaxFailures(3)
-                                                    .setMaxRetries(3)
-                                                    .setResetTimeout(15000)
-                                                    .setTimeout(250);
+                                                    .setMaxFailures(2)
+                                                    .setMaxRetries(2)
+                                                    .setResetTimeout(RESET_TIMEOUT)
+                                                    .setTimeout(CIRCUIT_TIMEOUT);
 
         adjBreaker = CircuitBreaker
                         .create("adjBreaker", Vertx.newInstance(vertx), breakerOpts)
-                        .openHandler(t -> new JsonObject().put("adj", "[open]"))
-                        .fallback(t -> new JsonObject().put("adj", "[failure]"));
+                        .openHandler(t -> circuitBreakerHandler("adj", "[open]"));
 
         nounBreaker = CircuitBreaker
                         .create("nounBreaker", Vertx.newInstance(vertx), breakerOpts)
-                        .openHandler(t -> new JsonObject().put("noun", "[open]"))
-                        .fallback(t -> new JsonObject().put("noun", "[failure]"));
+                        .openHandler(t -> circuitBreakerHandler("noun", "[open]"));
+    }
+
+    public JsonObject circuitBreakerHandler(String key, String value) {
+        LOG.error("Timeout requesting '{}', returned '{}'", key, value);
+        return new JsonObject().put(key, value);
     }
 
     /**
@@ -1948,13 +1946,19 @@ method which calls the adjective service.
      * @return A {@link Future} of type {@link JsonObject} which will contain an adjective on success
      */
     io.vertx.reactivex.core.Future<JsonObject> getAdjective() {
-        return adjBreaker.execute(fut ->
-            adjClient.get("/api/v1/adjective")
-                     .timeout(HTTP_CLIENT_TIMEOUT)
-                     .rxSend()
-                     .flatMapMaybe(InsultServiceImpl::mapStatusToError)
-                     .map(HttpResponse::bodyAsJsonObject)
-                     .subscribe(fut::complete, fut::fail));
+        return adjBreaker.executeWithFallback(fut ->
+            webClient.get(adjPort, adjHost, "/api/v1/adjective")
+                    .timeout(HTTP_CLIENT_TIMEOUT)
+                    .rxSend()
+                    .doOnError(e -> LOG.error("REST Request failed", e))
+                    .flatMapMaybe(InsultServiceImpl::mapStatusToError)
+                    .map(HttpResponse::bodyAsJsonObject)
+                    .subscribe(
+                            fut::complete,
+                            fut::fail
+                    ),
+                t -> circuitBreakerHandler("adjective", "[failure]")
+        );
     }
 ----
 
@@ -2032,16 +2036,9 @@ components:
       properties:
         noun:
           type: string
-        adj:
-          type: array
-          items:
-            type: string
-    insultrequest:
-      type: object
-      required:
-      - name
-      properties:
-        name:
+        adj1:
+          type: string
+        adj2:
           type: string
 ----
 

@@ -1293,8 +1293,7 @@ define a `SimulationSource`.
                     .get("/api/v1/adjective")
                     .willReturn(success(ADJ_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())))
-
-    def setupSpec() {                                                           {conum-guard-groovy} <4>
+    def setupSpec() {                                                       {conum-guard-groovy} <4>
         System.setProperty('org.slf4j.simpleLogger.defaultLogLevel', 'debug')
         def hoverflyConfig = localConfigs().proxyLocalHost().captureAllHeaders()
         hoverfly = new Hoverfly(hoverflyConfig, SIMULATE)
@@ -1303,11 +1302,24 @@ define a `SimulationSource`.
                 .put('host', 'localhost')
                 .put('port', hoverfly.hoverflyConfig.proxyPort)
                 .put('type', 'HTTP')
-        vertx = Vertx.vertx()                                                   {conum-guard-groovy} <5>
+        vertx = Vertx.vertx()                                               {conum-guard-groovy} <5>
+
+        httpClientConfig = new JsonObject()
+            .put('noun',
+                new JsonObject().put('host', 'noun-service')
+                        .put('ssl', false)
+                        .put('port', 80)
+            )
+            .put('adjective',
+                new JsonObject().put('host', 'adjective-service')
+                        .put('ssl', false)
+                        .put('port', 80)
+            )
+            .put('proxyOptions', proxyOptions)
     }
 
     def setup() {
-        hoverfly.resetJournal()                                                 {conum-guard-groovy} <6>
+        hoverfly.resetJournal()                                             {conum-guard-groovy} <6>
     }
 
     // -- SNIP --
@@ -1329,16 +1341,16 @@ Now that we have set up the simulations for the dependent services, we can write
         setup: 'Http Client Config to work with Hoverfly'                   {conum-guard-groovy} <1>
             def httpClientConfig = new JsonObject()
                     .put('noun',
-                    new JsonObject().put('host', 'localhost')
-                            .put('ssl', false)
-                            .put('port', 80)
-                            .put('proxyOptions', proxyOptions)
+                         new JsonObject().put('host', 'localhost')
+                                .put('ssl', false)
+                                .put('port', 80)
+                                .put('proxyOptions', proxyOptions)
             )
                     .put('adjective',
-                    new JsonObject().put('host', 'localhost')
-                            .put('ssl', false)
-                            .put('port', 80)
-                            .put('proxyOptions', proxyOptions)
+                         new JsonObject().put('host', 'localhost')
+                                .put('ssl', false)
+                                .put('port', 80)
+                                .put('proxyOptions', proxyOptions)
             )
 
         and: 'Create the service under test'                                {conum-guard-groovy} <2>
@@ -1701,13 +1713,13 @@ multiple operations run asynchronously and in parallel.
         Future<JsonObject> fut = Future.future();
         fut.setHandler(insultGetHandler);
         CompositeFuture
-        .all(getNoun(), getAdjective(), getAdjective())         {conum-guard-groovy} <1>
+        .all(getNoun(), getAdjective(), getAdjective())         {conum-guard-java} <1>
             .rxSetHandler()
-            .flatMapMaybe(InsultServiceImpl::mapResultToError)  {conum-guard-groovy} <2>
-            .map(InsultServiceImpl::buildInsult)                {conum-guard-groovy} <3>
+            .flatMapMaybe(InsultServiceImpl::mapResultToError)  {conum-guard-java} <2>
+            .map(InsultServiceImpl::buildInsult)                {conum-guard-java} <3>
             .subscribe(
-                fut::complete,                                  {conum-guard-groovy} <4>
-                fut::fail                                       {conum-guard-groovy} <5>
+                fut::complete,                                  {conum-guard-java} <4>
+                fut::fail                                       {conum-guard-java} <5>
             );
     }
 
@@ -1763,36 +1775,37 @@ public class InsultServiceImpl implements InsultService {
      * @param config The {@link JsonObject} configuration for this service
      */
     public InsultServiceImpl(io.vertx.core.Vertx vertx, JsonObject config) {
+        this.config = config;
 
-        kafka = KafkaService
-                    .createProxy(Vertx.newInstance(vertx), "kafka.service");    {conum-guard-groovy} <1>
+        kafka = KafkaService.createProxy(Vertx.newInstance(vertx), "kafka.service");    {conum-guard-java} <1>
 
-        JsonObject nounConfig = config.getJsonObject("noun");
-        JsonObject adjConfig = config.getJsonObject("adjective");
+        nounHost = config.getJsonObject("noun").getString("host");
+        nounPort = config.getJsonObject("noun").getInteger("port");
+
+        adjHost = config.getJsonObject("adjective").getString("host");
+        adjPort = config.getJsonObject("adjective").getInteger("port");
+
         this.vertx = Vertx.newInstance(vertx);
-        WebClientOptions nounClientOpts = new WebClientOptions(nounConfig)
-                .setLogActivity(true);
-        WebClientOptions adjClientOpts = new WebClientOptions(adjConfig)
-                .setLogActivity(true);
-        nounClient = WebClient.create(this.vertx, nounClientOpts);
-        adjClient = WebClient.create(this.vertx, adjClientOpts);
+
+        WebClientOptions clientOpts = new WebClientOptions()
+                .setLogActivity(false);
+        if (config.containsKey("proxyOptions")) {
+            clientOpts.setProxyOptions(new ProxyOptions(config.getJsonObject("proxyOptions")));
+        }
+        webClient = WebClient.create(this.vertx, clientOpts);
     }
 
-
     /**
-     * Use the {@link KafkaService} event bus proxy to make calls to the
-     * Kafka microservice
+     * Use the {@link KafkaService} event bus proxy to make calls to the Kafka microservice
      * @param insult An insult made up of 2 adjectives and a noun
      * @param handler A handler to be called
      */
     @Override
     public InsultService publish(JsonObject insult, Handler<AsyncResult<Void>> handler) {
-        Future<Void> fut = Future.future();                                     {conum-guard-groovy} <2>
-        handler.handle(fut);                                                    {conum-guard-groovy} <3>
+        Future<Void> fut = Future.future();             {conum-guard-java} <2>
+        fut.setHandler(handler);                        {conum-guard-java} <3>
         kafka.rxPublish(insult)
-                .toObservable()
-                .doOnError(fut::fail)                                           {conum-guard-groovy} <4>
-                .subscribe(v -> fut.complete());                                {conum-guard-groovy} <5>
+             .subscribe(fut::complete, fut::fail);      {conum-guard-java} <4>
         return this;
     }
 
@@ -1801,8 +1814,7 @@ public class InsultServiceImpl implements InsultService {
 <1> Create an instance of the proxy at the class scope (See note below)
 <2> Create a Future with which to complete the handler
 <3> Set the handler to use the Future
-<4> Set the Rx error handler to fail the Future on error
-<5> Set the completion of the Rx stream to complete the Future
+<4> Handle both success and failure for the stream
 
 [IMPORTANT]
 ====
@@ -1868,25 +1880,34 @@ we expect a circuit breaker result instead of a normal success response.
                     .willReturn(success(ADJ_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())
                                     .withDelay(1, TimeUnit.SECONDS)))
+    def setupSpec() {
+        System.setProperty('org.slf4j.simpleLogger.defaultLogLevel', 'debug')
+        def hoverflyConfig = localConfigs().proxyLocalHost().captureAllHeaders()
+        hoverfly = new Hoverfly(hoverflyConfig, SIMULATE)
+        hoverfly.start()
+        proxyOptions = new JsonObject()
+                .put('host', 'localhost')
+                .put('port', hoverfly.hoverflyConfig.proxyPort)
+                .put('type', 'HTTP')
+        vertx = Vertx.vertx()
+
+        httpClientConfig = new JsonObject()
+            .put('noun',
+                new JsonObject().put('host', 'noun-service')
+                        .put('ssl', false)
+                        .put('port', 80)
+            )
+            .put('adjective',
+                new JsonObject().put('host', 'adjective-service')
+                        .put('ssl', false)
+                        .put('port', 80)
+            )
+            .put('proxyOptions', proxyOptions)
+    }
 
     @Unroll
-    def 'Test getting a noun: #description'() {
-        setup: 'Http Client Config to work with Hoverfly'
-            def httpClientConfig = new JsonObject()
-                    .put('noun',
-                    new JsonObject().put('host', 'localhost')
-                            .put('ssl', false)
-                            .put('port', 80)
-                            .put('proxyOptions', proxyOptions)
-            )
-                    .put('adjective',
-                    new JsonObject().put('host', 'localhost')
-                            .put('ssl', false)
-                            .put('port', 80)
-                            .put('proxyOptions', proxyOptions)
-            )
-
-        and: 'Create the service under test'
+    def 'Test getting an insult: #description'() {
+        setup: 'Create the service under test'
             InsultServiceImpl underTest = new InsultServiceImpl(vertx, httpClientConfig)
 
         and: 'AsyncConditions'
@@ -1900,20 +1921,23 @@ we expect a circuit breaker result instead of a normal success response.
                 conds.evaluate {
                     assert succeeded == res.succeeded()
                     def body = res?.result()
-                    assert body?.getJsonArray('adjectives')?.getAt(0) == adjective
+                    assert body?.getString('adj1') == adjective
+                    assert body?.getString('adj2') == adjective
                     assert body?.getString('noun') == noun
                 }
             })
 
         expect: 'The appropriate response to REST calls'
-        conds.await(10)
+            conds.await(15)
+            hoverfly.resetJournal()
+            hoverfly.reset()
 
         where: 'The following data is applied'
-            simulation         | description    || succeeded | adjective   | noun
-            GET_RESP_ONE   | 'Happy path'   || true      | 'adjective' | 'noun'
-            GET_RESP_TWO   | 'Server error' || false     | null        | null
-            GET_RESP_THREE | 'Slow reply'   || true      | 'adjective' | '[timeout]'
-            GET_RESP_FOUR  | 'Slow reply'   || true      | '[timeout]' | 'noun'
+            simulation     | description       || succeeded | adjective   | noun
+            GET_RESP_ONE   | 'Happy path'      || true      | 'adjective' | 'noun'
+            GET_RESP_TWO   | 'Server error'    || true      | '[failure]' | '[failure]'
+            GET_RESP_TWO   | 'Server error'    || true      | '[failure]' | '[failure]'
+            GET_RESP_FOUR  | 'Slow noun reply' || true      | '[failure]' | 'noun'
     }
 ----
 

@@ -1360,7 +1360,7 @@ that we can delve deeper into HTTP clients in the next section.
 .src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult;
+package com.redhat.qcon.services.insult;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;

@@ -257,7 +257,7 @@ This wifi provided for this talk is NOT very secure. Please do not expect to hav
 ----
 
 <<<
-== Load A Complete DevOps Environment In Kubernetes
+== Exercise 1: Load A Complete DevOps Environment In Kubernetes
 
 [NOTE]
 ====
@@ -329,7 +329,7 @@ SonarQube account password: <BLANK>
 
 
 <<<
-== Create A New Vert.x Project
+== Exercise 2: Create A New Vert.x Project
 . Ensure that you have Apache Maven >= 3.3.9
 . Create an `insult-service` directory underthe `rhoar-kubernetes-qcon-2018` top-level directory
 . Change into the new `insult-service` directory
@@ -913,15 +913,6 @@ a format for writing data-driven tests which we will use and explain later.
 Now that we have written our test, here's how I would implement the feature code. Inside of the `src/main/java` directory
 of our `insult-service` project; w e'll create a new package directory `src/main/java/com/redhat/qcon/insult/services`.
 
-[NOTE]
-====
-If you are using an IDE like Eclipse or IntelliJ, you will need to ensure that you enable annotation
-processing for the Java compiler. Vert.x uses the annotation processor to generate implementation code
-for Service Proxy implementations. Depending on which Vert.x language modules you have included in your
-Maven dependencies, Vert.x will generate Service Proxy client code for each supported language runtime like:
-JavaScript, RxJava, Kotlin, etc...
-====
-
 .MainVerticle.java
 [source,java,subs=attributes+]
 ----
@@ -1124,6 +1115,15 @@ package com.redhat.qcon.insult.services;
 
 import io.vertx.codegen.annotations.ModuleGen;
 ----
+
+[NOTE]
+====
+If you are using an IDE like Eclipse or IntelliJ, you will need to ensure that you enable annotation
+processing for the Java compiler. Vert.x uses the annotation processor to generate implementation code
+for Service Proxy implementations. Depending on which Vert.x language modules you have included in your
+Maven dependencies, Vert.x will generate Service Proxy client code for each supported language runtime like:
+JavaScript, RxJava, Kotlin, etc...
+====
 
 ==== The Interface
 All service proxies start with an Interface definition which looks something like this:

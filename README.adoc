@@ -4,7 +4,7 @@ ifndef::icons[:conum-guard-java: // //]
 :conum-guard-groovy: //
 ifndef::icons[:conum-guard-groovy: // //]
 :icons: font
-:sectnumlevels: 5
+:sectnumlevels: 5InsultService.class
 :pdf-page-size: Letter
 :source-highlighter: rouge
 :rouge-theme: github
@@ -227,6 +227,35 @@ will all of the participants will be pasted into those channels.
 * https://gitter.im/rhoar-qcon-2018/Questions[Questions] - Ask Questions Here is we are not getting to you quickly enough
 * https://gitter.im/rhoar-qcon-2018/Feedback[Feedback] - Tell us what you liked (or didn't, S'ok we have thick skin)!
 
+== Conference WiFi SUCKS!
+Those of you who have been to many conferences are aware that conference wifi is terrible, slow, and overtaxed. To help prevent the slow conference wifi from slowing us down too much, we'll be using a local Nexus server for Maven artifacts. This will allow everyone to get cached versions of the required artifacts for local development without overstraining the hotel's WiFi.
+
+* SSID: rhoar-qcon-2018
+* KEY: ILikeReactiveJava
+
+[IMPORTANT]
+====
+This wifi provided for this talk is NOT very secure. Please do not expect to have reliable security on this network!
+====
+
+.Connect To The `rhoar-qcon-2018` wifi
+.In your home directory, ensure that the directory `.m2` exists
+.In the `<HOME>/.m2` directory, create a file `settings.xml`
+
+.settings.xml
+[source, xml]
+----
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <mirrors>
+    <mirror> <!--Send all requests to the public group -->
+      <id>nexus</id>
+      <mirrorOf>*</mirrorOf>
+      <url>http://192.168.10.5.nip.io/repositories/maven-public/</url>
+    </mirror>
+  </mirrors>
+</settings>
+----
+
 <<<
 == Load A Complete DevOps Environment In Kubernetes
 
@@ -249,12 +278,15 @@ You can always download the latest OpenShift CLI tools from Github https://githu
 
 === Clone The Repositories
 
-. Open the `lab-infrastructure-as-code` repository https://github.com/rhoar-qcon-2018/lab-infrastructure-as-code[HERE]
-. Fork the repository to your own GitHub account
-. `git clone https://github.com/**YOUR_GITHUB_ACCOUNT_HERE**/lab-infrastructure-as-code.git`
-. Inside of the `lab-infrastructure-as-code` project, edit the `run-remote.sh` script and input your username for the cluster
+To simplify the process of getting all of the projects, we have created a Git project with Submodules. You can checkout the whole thing by running:
 
-.run-remote.sh
+.Clone Workshop Materials
+[source, bash]
+----
+git clone https://github.com/rhoar-qcon-2018/rhoar-kubernetes-qcon-2018.git --recurse-submodules
+----
+
+.Set Cluster Username
 [source, bash]
 ----
 export USERNAME='user<NUM>'
@@ -879,6 +911,15 @@ a format for writing data-driven tests which we will use and explain later.
 Now that we have written our test, here's how I would implement the feature code. Inside of the `src/main/java` directory
 of our `insult-service` project; w e'll create a new package directory `src/main/java/com/redhat/qcon/insult/services`.
 
+[NOTE]
+====
+If you are using an IDE like Eclipse or IntelliJ, you will need to ensure that you enable annotation
+processing for the Java compiler. Vert.x uses the annotation processor to generate implementation code
+for Service Proxy implementations. Depending on which Vert.x language modules you have included in your
+Maven dependencies, Vert.x will generate Service Proxy client code for each supported language runtime like:
+JavaScript, RxJava, Kotlin, etc...
+====
+
 .MainVerticle.java
 [source,java,subs=attributes+]
 ----
@@ -898,17 +939,26 @@ public class MainVerticle extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MainVerticle.class);
 
-    Maybe<JsonObject> initConfigRetriever() {                                   {conum-guard-groovy} <1>
+    Maybe<JsonObject> initConfigRetriever() {
         // Load the default configuration from the classpath
         LOG.info("Configuration store loading.");
-        ConfigStoreOptions defaultOpts = new ConfigStoreOptions()               {conum-guard-groovy} <2>
+        ConfigStoreOptions defaultOpts = new ConfigStoreOptions()
                 .setType("file")
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "insult_default_config.json"));
 
-        // When running inside of Kubernetes, configure the application to also load from
-        // a ConfigMap
-        ConfigStoreOptions confOpts = new ConfigStoreOptions()                  {conum-guard-groovy} <4>
+        // Load container specific configuration from a specific file path inside of the
+        // container
+        ConfigStoreOptions localConfig = new ConfigStoreOptions()
+                .setType("file")
+                .setFormat("json")
+                .setConfig(new JsonObject().put("path", "/opt/docker_config.json"))
+                .setOptional(true);
+
+        // When running inside of Kubernetes, configure the application to also load
+        // from a ConfigMap. This config is ONLY loaded when running inside of
+        // Kubernetes or OpenShift
+        ConfigStoreOptions confOpts = new ConfigStoreOptions()
                 .setType("configmap")
                 .setConfig(new JsonObject()
                         .put("name", "insult-config")
@@ -916,14 +966,12 @@ public class MainVerticle extends AbstractVerticle {
                 );
 
         // Add the default and container config options into the ConfigRetriever
-        ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()  {conum-guard-groovy} <5>
+        ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()
                 .addStore(defaultOpts)
                 .addStore(confOpts);
 
         // Create the ConfigRetriever and return the Maybe when complete
-        return ConfigRetriever.create(vertx, retrieverOptions)
-                              .rxGetConfig()
-                              .toMaybe();                                       {conum-guard-groovy} <6>
+        return ConfigRetriever.create(vertx, retrieverOptions).rxGetConfig().toMaybe();
     }
 
     @Override

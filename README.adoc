@@ -291,7 +291,6 @@ Server authentication token: <PASTE TOKEN HERE>
 SonarQube account login: <BLANK>
 
 SonarQube account password: <BLANK>
-===
 
 <<<
 == Load Applications Into CI/CD Environment
@@ -1070,7 +1069,7 @@ In order for the Vert.x code generation to work, we need to annotate the package
 processed. We do this by creating a `package-info.java` file. You should place this file deep enough in the hierarchy
 that will prevent most of the code from being considered, but high enough that you can process all required code:
 
-.src/main/java/com/redhat/qcon/services/package-info.java
+.src/main/java/com/redhat/qcon/insult/services/package-info.java
 [source,java,subs=attributes+]
 ----
 @ModuleGen(name = "insult", groupPackage = "com.redhat.qcon.insult.services")
@@ -1082,10 +1081,10 @@ import io.vertx.codegen.annotations.ModuleGen;
 ==== The Interface
 All service proxies start with an Interface definition which looks something like this:
 
-.src/main/java/com/redhat/qcon/services/insult/InsultService.java
+.src/main/java/com/redhat/qcon/insult/services/InsultService.java
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult;
+package com.redhat.qcon.insult.services;
 
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.codegen.annotations.ProxyGen;
@@ -1159,10 +1158,10 @@ using http://spockframework.org/spock/docs/1.1/index.html[Spock Framework] in or
 Spock Specifications are quite easy to write and lend themselves to readability. We start off with a Groovy class which
 extends `Specification`.
 
-.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
+.src/test/groovy/com/redhat/qcon/insult/services/InsultServiceImplSpec.groovy
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult
+package com.redhat.qcon.insult.services
 
 import spock.lang.Specification
 
@@ -1182,10 +1181,10 @@ Any resources which you would want to re-use across tests will need to be define
 `@Shared`, otherwise Spock will prevent the tests from running. This is to ensure that you don't accidentally re-use
 state without being explicit. `static final` field are acceptable too.
 
-.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
+.src/test/groovy/com/redhat/qcon/insult/services/InsultServiceImplSpec.groovy
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult
+package com.redhat.qcon.insult.services
 
 import spock.lang.Specification
 import io.specto.hoverfly.junit.core.Hoverfly
@@ -1221,7 +1220,7 @@ To implement the simulations in Hoverfly, we use the
 http://hoverfly.readthedocs.io/projects/hoverfly-java/en/latest/pages/corefunctionality/dsl.html[Hoverfly DSL] to
 define a `SimulationSource`.
 
-.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
+.src/test/groovy/com/redhat/qcon/insult/services/InsultServiceImplSpec.groovy
 [source,java,subs=attributes+]
 ----
     // -- SNIP --
@@ -1285,7 +1284,7 @@ define a `SimulationSource`.
 
 Now that we have set up the simulations for the dependent services, we can write our specification test.
 
-.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
+.src/test/groovy/com/redhat/qcon/insult/services/InsultServiceImplSpec.groovy
 [source,java,subs=attributes+]
 ----
     @Unroll                                                                 {conum-guard-groovy} <9>
@@ -1357,10 +1356,10 @@ cover the critical paths.
 We can now create a class which implements our interface. We have left the service implementation class as a stub so
 that we can delve deeper into HTTP clients in the next section.
 
-.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult;
+package com.redhat.qcon.insult.services;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -1421,11 +1420,11 @@ client.get("/some/path")
             return resp;
         })
         .map(HttpResponse::bodyAsJsonObject)
-        .doOnError(e -> {
-            // Handle exceptions
-        })
         .subscribe(json -> {
             // Handle successful JSON response body
+        },
+        e -> {
+            // Handle exceptions
         });
 ----
 
@@ -1467,10 +1466,10 @@ This code is simple to test and easier to read. As we go forward, this is the pa
 ==== Implementing the Insult Service Using Web Client
 Now, let's implement some methods so that we can make requests to our associated microservices and retrieve the results.
 
-.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult;
+package com.redhat.qcon.insult.services;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -1582,7 +1581,7 @@ public class InsultServiceImpl implements InsultService {
 We have defined some new methods which allow us to make HTTP requests and return `Future`s for asynchronous interaction.
 These futures can then be composed in another method:
 
-.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
     // -- SNIP --
@@ -1679,7 +1678,7 @@ First, add the library for the service proxy client:
 
 Next, we can create an instance of the Service Proxy from our application.
 
-.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
 public class InsultServiceImpl implements InsultService {
@@ -1775,7 +1774,7 @@ our new capability. We'll modify the test result for the delayed response test s
 we expect a circuit breaker result instead of a normal success response.
 
 
-.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.java
+.src/test/groovy/com/redhat/qcon/insult/services/InsultServiceImplSpec.java
 [source,java,subs=attributes+]
 ----
     static final SimulationSource GET_RESP_THREE = dsl(
@@ -1854,7 +1853,7 @@ the circuit breakers.
 Let's have a look at how we would add circuit breakers to the
 method which calls the adjective service.
 
-.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
     private final CircuitBreaker adjBreaker;
@@ -2039,7 +2038,7 @@ The first step is to create an instance of the OpenAPI3RouterFactory:
         InsultServiceImpl nonRx = new InsultServiceImpl(vertx.getDelegate(), config);
         new ServiceBinder(vertx.getDelegate())
                 .setAddress("insult.service")
-                .register(com.redhat.qcon.insult.services.insult.InsultService.class, nonRx);
+                .register(com.redhat.qcon.insult.services.InsultService.class, nonRx);
 
         // Create the OpenAPI3RouterFactory using the API specification YAML file
         return OpenAPI3RouterFactory.rxCreate(vertx, "/insult-api-spec.yaml")
@@ -2181,7 +2180,7 @@ Since we have already defined a `/health` endpoint in our OpenAPI specification,
 need to write the service proxy implementation and wire it to our existing Router. Let's
 add the `check` method to our Service Proxy interface:
 
-.src/main/java/com/redhat/qcon/insult/services/insult/InsultService.java
+.src/main/java/com/redhat/qcon/insult/services/InsultService.java
 [source,java,subs=attributes+]
 ----
     /**

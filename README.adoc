@@ -817,7 +817,7 @@ by providing a comprehensive set of APIs for loading the application's configura
 deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration.
 
 Another best practice is that we should practice "test first" development. To further that concept, let's start
-by writing a failing test for the feature we intent to implement.
+by writing a failing test for the feature we intend to implement.
 
 .src/test/groovy/com/redhat/qcon/MainVerticleSpec.groovy
 [source,groovy,subs=attributes+]

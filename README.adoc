@@ -504,7 +504,9 @@ run the Spock tests:
 With the latest versions of Jenkins, the new https://jenkins.io/doc/book/pipeline/syntax/[*_declarative pipeline syntax_*]
 has become the preferred way in which to define DevOps pipelines. Let's add a *_Jenkinsfile_* to our *_insult_* service
 and discuss how it works. In later steps we will add more capabilities to the pipeline to improve our ability to
-achieve better results faster.
+achieve better results faster. The `Jenkinsfile` can be placed anywhere in the project, but
+it is simplest to put it in the root of the project so that we do not have to tell Jenkins and
+OpenShift where to look.
 
 .Jenkinsfile
 [source,groovy,subs=attributes+]

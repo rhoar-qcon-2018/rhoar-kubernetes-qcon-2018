@@ -2118,15 +2118,15 @@ service proxy interfaces for the front-end web application.
 
             // Map out OpenAPI3 route to our Service Proxy implementation
             factory.addHandlerByOperationId("getInsult", ctx -> service.rxGetREST()
-                            .doOnError(e -> errorHandler(ctx, e)).subscribe(json -> sendResult(ctx, json)));
+                            .subscribe(
+                                    json -> sendResult(ctx, json),
+                                    e -> errorHandler(ctx, e)));
 
             // Map out OpenAPI3 route to our Service Proxy implementation
             factory.addHandlerByOperationId("health", ctx -> service.rxCheck()
-                                                                    .subscribe(
-                                                                            json -> sendResult(ctx, json),
-                                                                            e -> errorHandler(ctx, e)
-                                                                    )
-                                            );
+                            .subscribe(
+                                    json -> sendResult(ctx, json),
+                                    e -> errorHandler(ctx, e)));
 
             Router api = factory.getRouter();
 

@@ -338,7 +338,7 @@ SonarQube account password: <BLANK>
 .Executing Fabric8 Vert.x Plugin To Start A New Project
 [source,bash]
 ----
-$ mvn io.fabric8:vertx-maven-plugin:1.0.13:setup -DvertxVersion=3.5.1
+$ mvn io.reactiverse:vertx-maven-plugin:1.0.13:setup -DvertxVersion=3.5.1
 [INFO] Scanning for projects...
 [INFO]
 [INFO] ------------------------------------------------------------------------

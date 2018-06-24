@@ -999,7 +999,7 @@ our Vert.x code.
 When using the Vert.x ConfigStoreOptions, remember that the order in which ConfigStoreOptions are added
 is significant. Items added later will override values from items which were loaded earlier. For example, if the
 default config sets `noun.host = 'localhost'`, but the Kubernetes ConfigMap sets `noun.host = '192.168.1.10'`,
-the ConfigMap value will take precedence.
+the Kubernetes ConfigMap value will take precedence.
 ====
 
 [NOTE]

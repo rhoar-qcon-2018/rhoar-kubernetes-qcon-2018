@@ -2252,6 +2252,74 @@ add the `check` method to our Service Proxy interface:
 
 And write a test to ensure that it is working as expected.
 
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImplSpec.groovy
+[source, groovy, subs=attributes+]
+----
+@Unroll
+def "Test health check endpoint: #description"() {
+    setup: 'Create Mocks for circuit breakers'
+        def adjBreaker = Mock(CircuitBreaker) {
+            1 * state() >> adjective
+        }
+        def nounBreaker = Mock(CircuitBreaker) {
+            1 * state() >> noun
+        }
+
+    and: 'Create an instance of the service under test'
+        def underTest = new InsultServiceImpl(vertx, httpClientConfig)
+
+    and: 'Replace the circuit breakers with Mocks'
+        underTest.adjBreaker = adjBreaker
+        underTest.nounBreaker = nounBreaker
+
+    and: 'An instance of AsyncConditions'
+        def conds = new AsyncConditions(1)
+
+    expect: 'We call the health check method'
+        underTest.check({ res ->
+            conds.evaluate {
+                assert res.succeeded() == status
+                assert res.result().getString("noun") == noun
+                assert res.result().getString("adj") == adjective
+            }
+        })
+
+    where: 'The following data table is used.'
+        description            | status     | noun      | adjective
+        'Both breakers closed' | true       | CLOSED    | CLOSED
+        'Adj breaker open'     | false      | CLOSED    | OPEN
+        'Noun breaker open'    | false      | OPEN      | CLOSED
+        'Both breakers open'   | false      | OPEN      | OPEN
+}
+----
+
+And the actual implementation code:
+
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
+[source, java, subs=attributes+]
+----
+/**
+ * Check the health of this service
+ * @param healthCheckHandler A {@link Handler} callback for the results
+ */
+@Override
+public void check(Handler<AsyncResult<JsonObject>> healthCheckHandler) {
+    JsonObject status = new JsonObject();
+
+    String nounState = nounBreaker.state().name();
+    String adjState = adjBreaker.state().name();
+    status.put("noun", nounState)
+            .put("adj", adjState);
+
+    if (nounState.contentEquals("OPEN") || adjState.contentEquals("OPEN")) {
+        status.put("status", "OK");
+    } else {
+        status.put("status", "DEGRADED");
+    }
+    healthCheckHandler.handle(Future.succeededFuture(status));
+}
+----
+
 <<<
 == Quality Analysis And Project Health Using SonarQube
 
@@ -2268,7 +2336,7 @@ Jenkinsfile to tell it to analyze the code with SonarQube.
 .insult-service/Jenkinsfile
 [source,groovy,subs=attributes+]
 ----
-    ... SNIP ..
+    ... SNIP ...
     stage('Test') {
       steps {
         sh 'mvn test'

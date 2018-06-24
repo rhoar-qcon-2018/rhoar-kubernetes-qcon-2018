@@ -2160,39 +2160,36 @@ service proxy interfaces for the front-end web application.
 
 Pay special attention to the `BridgeOptions` object. This is how to tell Vert.x which
 addresses can communicate over the websocket bridge. Unless explicitly allowed,
-sending messages to other event bus addresses is prohibited.
+sending/receiving messages to/from other event bus addresses is prohibited.
 
-Another thing to mind is that we are calling a `errorHandler` and a `sendResult` method
+Another thing to mind is that we are calling an `errorHandler` and a `sendResult` method
 which have not yet been defined. These methods, defined below, allow us to separate out
 the functionality in a way that is easier to read and easier to test.
 
 .src/main/java/com/redhat/qcon/insult/MainVerticle.java
 [source,java,subs=attributes+]
 ----
-
     /**
      * Send a successful HTTP response
-     * @param ctx The {@link RoutingContext} of the request
+     *
+     * @param ctx  The {@link RoutingContext} of the request
      * @param json The {@link JsonObject} body to be sent in the response
      */
     private void sendResult(RoutingContext ctx, JsonObject json) {
-        ctx.response()
-            .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON.getMimeType())
-            .setStatusCode(OK.code())
-            .setStatusMessage(OK.reasonPhrase())
-            .end(json.encodePrettily());
+            ctx.response().putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON.getMimeType())
+                            .setStatusCode(OK.code()).setStatusMessage(OK.reasonPhrase())
+                            .end(json.encodePrettily());
     }
 
     /**
      * Send an unsuccessful HTTP response
+     *
      * @param ctx The {@link RoutingContext} of the request
-     * @param e The error which caused the failure
+     * @param e   The error which caused the failure
      */
     private void errorHandler(RoutingContext ctx, Throwable e) {
-        ctx.response()
-          .setStatusCode(INTERNAL_SERVER_ERROR.code())
-          .setStatusMessage(INTERNAL_SERVER_ERROR.reasonPhrase())
-          .end(e.getLocalizedMessage());
+            ctx.response().setStatusCode(INTERNAL_SERVER_ERROR.code())
+                            .setStatusMessage(INTERNAL_SERVER_ERROR.reasonPhrase()).end(e.getLocalizedMessage());
     }
 ----
 
@@ -2202,14 +2199,14 @@ in sequence during the start of the application.
 .src/main/java/com/redhat/qcon/insult/MainVerticle.java
 [source,java,subs=attributes+]
 ----
-
     @Override
     public void start(Future<Void> startFuture) {
         initConfigRetriever()
-                .flatMap(this::provisionRouter)
-                .flatMap(this::provisionHttpServer)
-                .doOnError(startFuture::fail)
-                .subscribe(c -> startFuture.complete());
+            .flatMap(this::provisionRouter)
+            .flatMap(this::provisionHttpServer)
+            .subscribe(
+                    server -> startFuture.complete(),
+                    startFuture::fail);
     }
 ----
 

@@ -495,7 +495,7 @@ Every time a change gets pushed to *_master_* or a pull request gets merged to *
 will fire this webhook and thus trigger a Jenkins pipeline build in OpenShift.
 
 <<<
-=== Basic Vert.x Concepts
+== Basic Vert.x Concepts
 
 The https://vertx.io/docs/vertx-core/java/[Vert.x Core Documentation] is a really great reference to some of the basic
 concepts in Vert.x. We'll cover a few of these things here, but please feel free to go to the official docs for more
@@ -524,7 +524,7 @@ To support this, Vert.x provides non-blocking implementations of many common ope
 * Authentication/Authorization/Audit (AAA)
 * Metrics
 
-==== Verticles
+=== Verticles
 From the new project we generated via Maven, we can see that a class called `MainVerticle` was created.
 https://vertx.io/docs/vertx-core/java/#_verticles[Verticles] are the basic unit of an application in Vert.x. By default,
 Verticles are run single-threaded on an event loop (Reactor Pattern). The one difference between this and other Reactor
@@ -549,7 +549,7 @@ public class MainVerticle extends AbstractVerticle {
 }
 ----
 
-==== Non-Blocking
+=== Non-Blocking
 Because Vert.x uses event loops for Verticles, we must always ensure that we do not call blocking code and thus block
 the event loop. Since Vert.x does not have non-blocking APIs for every situation, it provides a method of
 implementing traditional blocking Java code using the `vertx.executeBlocking` method. For example, if we wanted to make a
@@ -567,7 +567,7 @@ vertx.executeBlocking(future -> {
 ----
 
 [#event-bus-intro]
-==== Event Bus
+=== Event Bus
 The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to
 run single-threaded and potentially across multiple threads/cores in parallel, we need a safe way to share data which
 will not cause race conditions or concurrency problems. To facilitate this, Vert.x has an Event Bus through which we
@@ -592,11 +592,12 @@ vertx.timerStream(300)
 ----
 
 <<<
-=== Implement Kubernetes Config
+== Implement Kubernetes Config
 Following one of the tenets of https://12factor.net/config[12 Factor Applications], we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
 by providing a comprehensive set of APIs for loading the application's configuration. In our case, since we are
-deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration.
+deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration. This feature is already implemented in
+our skeleton project which we cloned earlier. You can look at the code in the
 
 Another best practice is that we should practice "test first" development. To further that concept, let's start
 by writing a failing test for the feature we intend to implement.

@@ -360,7 +360,7 @@ We will also need to add the GMavenPlus plugin and configure the Maven SureFire 
 run the Spock tests. This is already configured in your POM from the skeleton project.
 
 <<<
-=== Create A Jenkins Pipeline
+== Create A Jenkins Pipeline
 With the latest versions of Jenkins, the new https://jenkins.io/doc/book/pipeline/syntax/[*_declarative pipeline syntax_*]
 has become the preferred way in which to define DevOps pipelines. The skeleton project you checked out earlier has a
 very complete Jenkins pipeline which we will discuss in detail as we go along.

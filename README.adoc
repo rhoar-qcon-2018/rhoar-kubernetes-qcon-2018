@@ -341,6 +341,7 @@ SonarQube account password: <BLANK>
 ====
 You CAN use the Vert.x Maven Plugin to create a project from scratch. If you are interested in this, please
 refer to the Appendix TODO Vert.x Maven Plugin
+====
 
 <<<
 === Set Up For Testing

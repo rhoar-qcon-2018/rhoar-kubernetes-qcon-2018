@@ -832,7 +832,7 @@ Kubernetes specific config as the cluster will allow Multicast DNS discovery ins
 ====
 
 <<<
-=== Implement A New https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
+== Implement A New https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first
 <<event-bus-intro, event bus example>> of sending and receiving on the event bus, we used a producer and a consumer based on
 rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer

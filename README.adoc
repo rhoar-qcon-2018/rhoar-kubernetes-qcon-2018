@@ -346,108 +346,18 @@ refer to the Appendix TODO Vert.x Maven Plugin
 <<<
 === Set Up For Testing
 
-Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. Personally,
-I prefer BDD style tests, so for this workshop I will be demonstrating
-http://spockframework.org/spock/docs/1.1/index.html[SpockFramework]. To use Spock, we will need to
-add some additional dependencies to our POM:
+Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. A Open Innovation Labs, we
+prefer Behavior Driven Development (BDD), so for this project we will use
+http://spockframework.org/spock/docs/1.1/index.html[SpockFramework]. In order to use Spock, we need a few dependencies
+which have already been added in the skeleton:
 
-.Adding Libraries For Spock Framework and Code Coverage
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>org.codehaus.groovy</groupId>
-    <artifactId>groovy-all</artifactId>
-    <version>2.4.12</version>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>org.javassist</groupId>
-    <artifactId>javassist</artifactId>
-    <version>3.21.0-GA</version>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>org.spockframework</groupId>
-    <artifactId>spock-core</artifactId>
-    <version>1.1-groovy-2.4</version>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>net.bytebuddy</groupId>
-    <artifactId>byte-buddy</artifactId>
-    <version>1.7.5</version>
-    <scope>test</scope>
-</dependency>
-<dependency> <!-- enables mocking of classes without default constructor -->
-    <groupId>org.objenesis</groupId>
-    <artifactId>objenesis</artifactId>
-    <version>2.6</version>
-    <scope>test</scope>
-</dependency>
-----
+. Groovy - For writing/running test specifications
+. Spock Framework - For BDD
+. Objenesis - For Mocking
+. ByteBuddy - For Mocking Static/Final
 
 We will also need to add the GMavenPlus plugin and configure the Maven SureFire plugin to be able to
-run the Spock tests:
-
-.Add Maven Plugins For Spock Framework and Code Coverage
-[source,xml,subs=attributes+]
-----
-<build>
-    <plugins>
-    ... SNIP ...
-        <plugin>    <!-- Add support for compiling Groovy files -->
-            <groupId>org.codehaus.gmavenplus</groupId>
-            <artifactId>gmavenplus-plugin</artifactId>
-            <version>1.5</version>
-            <executions>
-                <execution>
-                    <goals>
-                        <goal>addSources</goal>
-                        <goal>addTestSources</goal>
-                        <goal>generateStubs</goal>
-                        <goal>compile</goal>
-                        <goal>testGenerateStubs</goal>
-                        <goal>testCompile</goal>
-                        <goal>removeStubs</goal>
-                        <goal>removeTestStubs</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
-        <plugin> <!-- Configure the Maven SureFire to use Groovy Spec files for test -->
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.6</version>
-            <configuration>
-                <useFile>false</useFile>
-                <includes>
-                    <include>**/*Spec.groovy</include>
-                </includes>
-            </configuration>
-        </plugin>
-        <plugin> <!-- Configure JaCoCo to be able to extract code coverage information -->
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.7.6.201602180812</version>
-            <executions>
-                <execution>
-                    <id>jacoco-initialize</id>
-                    <goals>
-                        <goal>prepare-agent</goal>
-                    </goals>
-                </execution>
-                <execution>
-                    <id>jacoco-site</id>
-                    <phase>test</phase>
-                    <goals>
-                        <goal>report</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
-    ... SNIP ...
-    </plugins>
-</build>
-----
+run the Spock tests. This is already configured in your POM from the skeleton project.
 
 <<<
 === Create A Jenkins Pipeline

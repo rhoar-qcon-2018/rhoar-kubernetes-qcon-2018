@@ -891,6 +891,65 @@ Spock is written in Groovy, and we have also added the gmavenplus-plugin and the
 </plugin>
 ----
 
+== Our First Spock Test
+
+Create a directory "src/test/groovy" and add the package, "com/redhat/qcon/insult.".
+
+TIP: You may need to designate this folder as a source folder in your include
+
+Create a new Groovy script, "MainVerticleSpec."  The convention in BDD testing is to end your class names with, "Spec."
+
+The behavior we are expecting is that our microservice insults us when we call "/api/insult/v1." Type or paste the following code in the Groovy script:
+
+[source, javascript]
+----
+package com.redhat.qcon.insult
+
+import io.vertx.core.Vertx
+import io.vertx.core.http.HttpClientResponse
+import spock.lang.Shared
+import spock.lang.Specification
+import spock.util.concurrent.AsyncConditions
+
+class MainVerticleSpec extends Specification {
+
+    @Shared
+    Vertx vertx // <1>
+
+    def setup() {
+        vertx = Vertx.vertx() // <2>
+        def async = new AsyncConditions(1)
+        vertx.deployVerticle("com.redhat.qcon.insult.MainVerticle", { res ->
+            async.evaluate {
+                assert res.succeeded()
+            }
+        })
+        async.await(10)// <3>
+    }
+
+    def "Test Being Insulted"() {// <4>
+        given: "An instance of Spock's AsyncConditions"
+            def async = new AsyncConditions(2)
+
+        when: "We make an HTTP request to the server"
+            vertx.createHttpClient().get(80, "localhost", "/api/v1/insult").handler({ response ->
+                async.evaluate {
+                    assert response.statusCode() == 200
+                    assert response.getHeader("Content-Type") == "application/json"
+                }
+                response.bodyHandler({ buffer ->
+                    async.evaluate {
+                        assert buffer.toJsonObject().getString("insult") == "testinsult"
+                    }
+                })
+            }).end()// <5>
+
+        then: "We expect to see an insult"
+            async.await(10)
+    }
+}
+----
+
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first
 <<event-bus-intro, event bus example>> of sending and receiving on the event bus, we used a producer and a consumer based on
 rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer

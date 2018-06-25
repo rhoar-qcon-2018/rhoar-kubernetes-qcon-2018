@@ -337,106 +337,10 @@ SonarQube account password: <BLANK>
 . Got to https://github.com/rhoar-qcon-2018/insult-service and *FORK* that project
 . Clone that *FORK* of the project locally `git clone https://github.com/<YOUR USER>/insult-service.git
 
-=== Create A New Vert.x Project Using The Vert.x Maven Plugin
-
-[IMPORTANT]
+[NOTE]
 ====
-When using the skeleton project, these steps are not required
-====
-
-. Create an `insult-service` directory under the `rhoar-kubernetes-qcon-2018` top-level directory
-. Run the following command
-.. Executing Reactiverse Vert.x Plugin To Start A New Project
-[source,bash]
-----
-$ mvn io.reactiverse:vertx-maven-plugin:1.0.15:setup -DvertxVersion=3.5.1
-[INFO] Scanning for projects...
-[INFO]
-[INFO] ------------------------------------------------------------------------
-[INFO] Building Maven Stub Project (No POM) 1
-[INFO] ------------------------------------------------------------------------
-[INFO]
-[INFO] --- vertx-maven-plugin:1.0.15:setup (default-cli) @ standalone-pom ---
-[INFO] No pom.xml found, creating it in /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service
-Set the project groupId [io.vertx.example]: com.redhat.qcon
-Set the project artifactId [my-vertx-project]: insult-service
-Set the project version [1.0-SNAPSHOT]: 1.0.0-SNAPSHOT
-Set the vertcile class name [MainVerticle]:
-[INFO] Creating verticle MainVerticle
-[INFO] Creating directory /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service/src/main/java/com/redhat/qcon
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 34.510 s
-[INFO] Finished at: 2018-05-21T12:07:46-04:00
-[INFO] Final Memory: 9M/166M
-[INFO] ------------------------------------------------------------------------
-----
-
-This will create a new Maven POM file populated based on the values you entered during the setup.
-
-After the POM file has been created, we will need to add some additional libraries for this microservice:
-
-* vertx-web-api-contract
-* vertx-rx-java2
-* vertx-service-proxy
-* vertx-sockjs-service-proxy
-* vertx-config-kubernetes-configmap
-* vertx-codegen
-* vertx-lang-js
-
-All of these are within the `io.vertx` Maven group ID and covered via the dependency management setup
-from the initialization process, so we can put them in without versions as follows:
-
-.POM Excerpt Showing Provided and Processor Dependencies
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-web-api-contract</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-rx-java2</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-service-proxy</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-sockjs-service-proxy</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-config-kubernetes-configmap</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-codegen</artifactId>
-    <scope>provided</scope>
-    <classifier>processor</classifier>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-lang-js</artifactId>
-    <scope>provided</scope>
-</dependency>
-----
-
-<<<
-=== Add New Project To GitHub
-Create a new repository on your GitHub account and check in your new project
-
-.Add Project To GitHub
-[source, bash]
-----
-$ cd insult-service
-$ git init
-$ git add pom.xml src
-$ git commit -am 'Initial import'
-$ git push origin master
-----
+You CAN use the Vert.x Maven Plugin to create a project from scratch. If you are interested in this, please
+refer to the Appendix TODO Vert.x Maven Plugin
 
 <<<
 === Set Up For Testing
@@ -2377,3 +2281,93 @@ libraries.
 
 [glossary]
 == Glossary
+
+[appendix]
+== Appendix
+
+=== Create A New Vert.x Project Using The Vert.x Maven Plugin
+
+[IMPORTANT]
+====
+When using the skeleton project, these steps are not required
+====
+
+. Create an `insult-service` directory under the `rhoar-kubernetes-qcon-2018` top-level directory
+. Run the following command
+.. Executing Reactiverse Vert.x Plugin To Start A New Project
+[source,bash]
+----
+$ mvn io.reactiverse:vertx-maven-plugin:1.0.15:setup -DvertxVersion=3.5.1
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Maven Stub Project (No POM) 1
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- vertx-maven-plugin:1.0.15:setup (default-cli) @ standalone-pom ---
+[INFO] No pom.xml found, creating it in /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service
+Set the project groupId [io.vertx.example]: com.redhat.qcon
+Set the project artifactId [my-vertx-project]: insult-service
+Set the project version [1.0-SNAPSHOT]: 1.0.0-SNAPSHOT
+Set the vertcile class name [MainVerticle]:
+[INFO] Creating verticle MainVerticle
+[INFO] Creating directory /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service/src/main/java/com/redhat/qcon
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 34.510 s
+[INFO] Finished at: 2018-05-21T12:07:46-04:00
+[INFO] Final Memory: 9M/166M
+[INFO] ------------------------------------------------------------------------
+----
+
+This will create a new Maven POM file populated based on the values you entered during the setup.
+
+After the POM file has been created, we will need to add some additional libraries for this microservice:
+
+* vertx-web-api-contract
+* vertx-rx-java2
+* vertx-service-proxy
+* vertx-sockjs-service-proxy
+* vertx-config-kubernetes-configmap
+* vertx-codegen
+* vertx-lang-js
+
+All of these are within the `io.vertx` Maven group ID and covered via the dependency management setup
+from the initialization process, so we can put them in without versions as follows:
+
+.POM Excerpt Showing Provided and Processor Dependencies
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-web-api-contract</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-rx-java2</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-service-proxy</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-sockjs-service-proxy</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-config-kubernetes-configmap</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-codegen</artifactId>
+    <scope>provided</scope>
+    <classifier>processor</classifier>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-lang-js</artifactId>
+    <scope>provided</scope>
+</dependency>
+----

@@ -841,7 +841,7 @@ The Spock dependencies have already been added to our POM but are listed below s
     <scope>test</scope>
 </dependency>
 ----
-Spock is written in Groovy, and we have also added the gmavenx-plugin and the Surefire and JaCoCo plugins for tests and code coverage:
+Spock is written in Groovy, and we have also added the gmavenplus-plugin and the Surefire and JaCoCo plugins for tests and code coverage:
 
 ----
 <plugin>

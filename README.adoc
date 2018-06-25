@@ -329,23 +329,29 @@ SonarQube account password: <BLANK>
 
 
 <<<
-== Exercise 2: Create A New Vert.x Project
+== Exercise 2: Creating A New Vert.x Project
 . Ensure that you have Apache Maven >= 3.3.9
-. Create an `insult-service` directory underthe `rhoar-kubernetes-qcon-2018` top-level directory
-. Change into the new `insult-service` directory
-. Run the following command
 
-.Executing Fabric8 Vert.x Plugin To Start A New Project
+=== Download Our Skeleton Project
+
+. Got to https://github.com/rhoar-qcon-2018/insult-service and *FORK* that project
+. Clone that *FORK* of the project locally `git clone https://github.com/<YOUR USER>/insult-service.git
+
+=== Create A New Vert.x Project Using The Vert.x Maven Plugin
+
+. Create an `insult-service` directory under the `rhoar-kubernetes-qcon-2018` top-level directory
+. Run the following command
+.. Executing Reactiverse Vert.x Plugin To Start A New Project
 [source,bash]
 ----
-$ mvn io.reactiverse:vertx-maven-plugin:1.0.13:setup -DvertxVersion=3.5.1
+$ mvn io.reactiverse:vertx-maven-plugin:1.0.15:setup -DvertxVersion=3.5.1
 [INFO] Scanning for projects...
 [INFO]
 [INFO] ------------------------------------------------------------------------
 [INFO] Building Maven Stub Project (No POM) 1
 [INFO] ------------------------------------------------------------------------
 [INFO]
-[INFO] --- vertx-maven-plugin:1.0.13:setup (default-cli) @ standalone-pom ---
+[INFO] --- vertx-maven-plugin:1.0.15:setup (default-cli) @ standalone-pom ---
 [INFO] No pom.xml found, creating it in /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service
 Set the project groupId [io.vertx.example]: com.redhat.qcon
 Set the project artifactId [my-vertx-project]: insult-service

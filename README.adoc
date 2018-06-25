@@ -812,6 +812,85 @@ Kubernetes specific config as the cluster will allow Multicast DNS discovery ins
 
 <<<
 == Implement A New https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
+
+=== Setup Groovy and the SpockFramework
+
+We are already following the RED-GREEN-REFACTOR pattern of Test Driven Development.  We've already used Vert.x' JUnit-compatible library vertx-unit.  
+
+At Red Hat's Open Innovation Labs, we prefer BDD style tests.  For most apps we like the Cucumber Framework.  Asynchronous testing is different though, and Eclipse Vert.x is asynchronous.  For this lab we wil use the SpockFramework which has excellent support for asynchronous testing.   
+
+The Spock dependencies have already been added to our POM but are listed below so that you can familiarize yourself with them.
+
+----
+<!-- Optional dependencies for using Spock -->
+<dependency> <!-- use a specific Groovy version rather than the one specified by spock-core -->
+    <groupId>org.codehaus.groovy</groupId>
+    <artifactId>groovy-all</artifactId>
+    <version>2.4.13</version>
+</dependency>
+<dependency> <!-- enables mocking of classes (in addition to interfaces) -->
+    <groupId>net.bytebuddy</groupId>
+    <artifactId>byte-buddy</artifactId>
+    <version>1.6.5</version>
+    <scope>test</scope>
+</dependency>
+<dependency> <!-- enables mocking of classes without default constructor (together with CGLIB) -->
+    <groupId>org.objenesis</groupId>
+    <artifactId>objenesis</artifactId>
+    <version>2.5.1</version>
+    <scope>test</scope>
+</dependency>
+----
+Spock is written in Groovy, and we have also added the gmavenx-plugin and the Surefire and JaCoCo plugins for tests and code coverage:
+
+----
+<plugin>
+    <!-- The gmavenplus plugin is used to compile Groovy code. To learn more about this plugin,
+    visit https://github.com/groovy/GMavenPlus/wiki -->
+    <groupId>org.codehaus.gmavenplus</groupId>
+    <artifactId>gmavenplus-plugin</artifactId>
+    <version>1.6</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>compile</goal>
+                <goal>compileTests</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+<plugin>    <!-- Configure the Maven SureFire plugin to use Groovy Spec files for test -->
+    <artifactId>maven-surefire-plugin</artifactId>
+    <version>2.20.1</version>
+    <configuration>
+        <useFile>false</useFile>
+        <includes>
+            <include>**/*Spec.java</include>
+        </includes>
+    </configuration>
+</plugin>
+<plugin>    <!-- Configure JaCoCo to be able to extract code coverage information -->
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.7.6.201602180812</version>
+    <executions>
+        <execution>
+            <id>jacoco-initialize</id>
+            <goals>
+                <goal>prepare-agent</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>jacoco-site</id>
+            <phase>test</phase>
+            <goals>
+                <goal>report</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+----
+
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first
 <<event-bus-intro, event bus example>> of sending and receiving on the event bus, we used a producer and a consumer based on
 rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer

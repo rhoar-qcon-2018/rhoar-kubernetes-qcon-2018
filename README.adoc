@@ -339,6 +339,11 @@ SonarQube account password: <BLANK>
 
 === Create A New Vert.x Project Using The Vert.x Maven Plugin
 
+[IMPORTANT]
+====
+When using the skeleton project, these steps are not required
+====
+
 . Create an `insult-service` directory under the `rhoar-kubernetes-qcon-2018` top-level directory
 . Run the following command
 .. Executing Reactiverse Vert.x Plugin To Start A New Project

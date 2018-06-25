@@ -536,86 +536,8 @@ run the Spock tests:
 <<<
 === Create A Jenkins Pipeline
 With the latest versions of Jenkins, the new https://jenkins.io/doc/book/pipeline/syntax/[*_declarative pipeline syntax_*]
-has become the preferred way in which to define DevOps pipelines. Let's add a *_Jenkinsfile_* to our *_insult_* service
-and discuss how it works. In later steps we will add more capabilities to the pipeline to improve our ability to
-achieve better results faster. The `Jenkinsfile` can be placed anywhere in the project, but
-it is simplest to put it in the root of the project so that we do not have to tell Jenkins and
-OpenShift where to look.
-
-.Jenkinsfile
-[source,groovy,subs=attributes+]
-----
-pipeline {                                                  {conum-guard-groovy} <1>
-  agent {
-    label 'jenkins-slave-mvn'                               {conum-guard-groovy} <2>
-  }
-  stages {                                                  {conum-guard-groovy} <3>
-    stage('Compile') {
-      steps {
-        sh 'mvn compile'                                    {conum-guard-groovy} <4>
-      }
-    }
-    stage('Test') {
-      steps {
-        sh 'mvn test'                                       {conum-guard-groovy} <5>
-      }
-    }
-    stage('Build Image') {
-      steps {
-        script {
-          openshift.withCluster() {                         {conum-guard-groovy} <6>
-            openshift
-                .selector('bc', 'insult-service')
-                .startBuild('--from-file=target/insult-service.jar', '--wait')
-          }
-        }
-      }
-    }
-    stage('Promote to TEST') {
-      steps {
-        script {
-          openshift.withCluster() {                         {conum-guard-groovy} <7>
-            def ciProject = openshift.project()
-            def testProject = ciProject.replaceFirst(/^labs-ci-cd/, /labs-test/)
-            openshift.withProject(testProject) {
-              openshift.tag('insult-service:latest', "${testProject}/insult-service:latest")
-            }
-          }
-        }
-      }
-    }
-    stage('Promote to DEMO') {
-      input {                                               {conum-guard-groovy} <8>
-        message "Promote service to DEMO environment?"
-        ok "PROMOTE"
-      }
-      steps {
-        script {
-          openshift.withCluster() {                         {conum-guard-groovy} <9>
-            def ciProject = openshift.project()
-            def demoProject = ciProject.replaceFirst(/^labs-ci-cd/, /labs-demo/)
-            openshift.withProject(demoProject) {
-              openshift.tag('insult-service:latest', "${demoProject}/insult-service:latest")
-            }
-          }
-        }
-      }
-    }
-  }
-}
-----
-<1> All declarative pipelines start with `pipeline` as the top-level closure
-<2> Use the `agent` block to select the appropriate Pod definition to build your project
-<3> Define different stages to track the progress of the pipeline
-<4> Compile the code using Maven
-<5> Test the code using the Maven SureFire plugin configured to use SpockFramework
-<6> Use the OpenShift plugin and DSL to trigger a Source-2-Image binary build from our resulting FatJAR
-<7> Tag the resulting container image into the `TEST` project (Thus triggering a redeployment)
-<8> Ask if the service should be promoted to the `DEMO` environment
-<9> Tag the resulting container image into the `DEMO` project (Thus triggering a redeployment)
-
-You can see that it is relatively quick and easy to chain operations together to handle the manual work of building
-and testing software before automatically deploying to a "production" environment.
+has become the preferred way in which to define DevOps pipelines. The skeleton project you checked out earlier has a
+very complete Jenkins pipeline which we will discuss in detail as we go along.
 
 === Add The Pipeline To OpenShift
 Part of our Ansible automation which was run this morning created a template for pipeline builds. If you go into your
@@ -1424,7 +1346,7 @@ public class InsultServiceImpl implements InsultService {
      */
     @Override
     public void getREST(Handler<AsyncResult<JsonObject>> insultGetHandler) {
-        throw new Exception("Not Implemented");
+        insultGetHandler.handle(Future.failedFuture(new Exception("Not Implemented")));
     }
 
     /**
@@ -1435,7 +1357,7 @@ public class InsultServiceImpl implements InsultService {
      */
     @Override
     public InsultService publish(JsonObject insult, Handler<AsyncResult<Void>> handler) {
-        throw new Exception("Not Implemented");
+        handler.handle(Future.failedFuture(new Exception("Not Implemented")));
     }
 }
 ----

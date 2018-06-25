@@ -780,37 +780,15 @@ applications.
 
 
 ==== Add Clustering Dependencies
-For this workshop, since we are using Kubernetes, we will use the Infinispan Cluster Manager by adding the following
-dependency
-
-.pom.xml Snippet
-[source,xml]
-----
-    <dependencies>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-infinispan</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.infinispan</groupId>
-          <artifactId>infinispan-cloud</artifactId>
-          <version>9.1.3.Final</version>
-        </dependency>
-        <dependency>
-          <groupId>org.jgroups.kubernetes</groupId>
-          <artifactId>jgroups-kubernetes</artifactId>
-          <version>1.0.3.Final</version>
-        </dependency>
-        ...SNIP...
-----
-
+For this workshop, since we are using Kubernetes, we will use the Infinispan Cluster Manager. The Maven dependecies
+have already been added to your project POM as part of the skeleton project.
 
 When running locally, we can just add `--cluster` to the execution of the fat-jar and Infinispan+JGroups will automatically
 discover other Vert.x nodes on the same network segment via Multicast DNS (MCAST_PING).
 
 ==== Clustering Inside Kubernetes/OpenShift
-When running inside of Kubernetes or OpenShift, we change the config with the system property
-`-Dvertx.jgroups.config=default-configs/default-jgroups-kubernetes.xml`.
+When running inside of Kubernetes or OpenShift, we change the config with the system properties
+`-Dvertx.jgroups.config=default-configs/default-jgroups-kubernetes.xml -Djava.net.preferIPv4Stack=true`.
 
 In our deployment environment, we need to set the `default` service account to have `view` role inside of the
 namespace and also set the `KUBERNETES_NAMESPACE` environment variable. With these changes in place, the Vert.x Pods

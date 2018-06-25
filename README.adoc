@@ -250,7 +250,7 @@ This wifi provided for this talk is NOT very secure. Please do not expect to hav
     <mirror> <!--Send all requests to the public group -->
       <id>nexus</id>
       <mirrorOf>*</mirrorOf>
-      <url>http://192.168.10.5.nip.io/repositories/maven-public/</url>
+      <url>http://192.168.10.5.nip.io/repository/maven-public/</url>
     </mirror>
   </mirrors>
 </settings>

@@ -762,7 +762,7 @@ time and resources for little gain. You should, however, aim to cover all critic
 ====
 
 <<<
-=== Configure Vert.x Clustering With Infinispan/JGroups
+== Configure Vert.x Clustering With Infinispan/JGroups
 A really impressive feature we can use in Vert.x is it's low-level support for clustering and distributed processing
 using the Event Bus. Vert.x supports a few different cluster manager implementations like
 https://vertx.io/docs/vertx-hazelcast/java[Hazelcast], https://vertx.io/docs/vertx-infinispan/java[Infinispan],

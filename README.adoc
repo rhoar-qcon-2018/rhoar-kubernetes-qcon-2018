@@ -1039,12 +1039,28 @@ state without being explicit. `static final` field are acceptable too.
 ----
 package com.redhat.qcon.insult.services
 
-import spock.lang.Specification
+import com.redhat.qcon.insult.services.InsultServiceImpl
 import io.specto.hoverfly.junit.core.Hoverfly
 import io.specto.hoverfly.junit.core.SimulationSource
-import spock.lang.Shared
-import io.vertx.core.json.JsonObject
 import io.vertx.core.Vertx
+import io.vertx.core.json.JsonObject
+import io.vertx.reactivex.circuitbreaker.CircuitBreaker
+import io.vertx.reactivex.core.CompositeFuture
+import io.vertx.serviceproxy.ServiceException
+import spock.lang.Shared
+import spock.lang.Specification
+import spock.lang.Unroll
+import spock.util.concurrent.AsyncConditions
+
+import java.util.concurrent.TimeUnit
+
+import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON
+import static io.specto.hoverfly.junit.core.HoverflyConfig.localConfigs
+import static io.specto.hoverfly.junit.core.HoverflyMode.SIMULATE
+import static io.specto.hoverfly.junit.core.SimulationSource.*
+import static io.specto.hoverfly.junit.dsl.HoverflyDsl.*
+import static io.specto.hoverfly.junit.dsl.ResponseCreators.serverError
+import static io.specto.hoverfly.junit.dsl.ResponseCreators.success
 
 class InsultServiceImplSpec extends Specification {
 

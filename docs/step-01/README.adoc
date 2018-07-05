@@ -1,0 +1,268 @@
+= Step 1 : Getting Started
+
+As you may have guessed Vert.x can be downloaded from the official site: https://vertx.io/download.  But you don't need to download Vert.x: Maven or Gradle will take of that for you.  The easiest way to get started with Eclipse Vert.x is create a project.
+
+* Create a new folder for your project named, "insult-service."
+* From inside your new folder open a terminal and run:
+
+NOTE:   If you are using Windows you should probably create a folder directly on the C drive to prevent any weirdness that could arise from path names.
+
+```
+mvn io.fabric8:vertx-maven-plugin:1.0.13:setup -DvertxVersion=3.5.2
+```
+
+You will be prompted to fill the GAV information.  You can accept the defaults or choose your own.
+
+```
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Maven Stub Project (No POM) 1
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- vertx-maven-plugin:1.0.13:setup (default-cli) @ standalone-pom ---
+[INFO] No pom.xml found, creating it in /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service
+Set the project groupId [io.vertx.example]: com.redhat.qcon
+Set the project artifactId [my-vertx-project]: insult-service
+Set the project version [1.0-SNAPSHOT]: 1.0.0-SNAPSHOT
+Set the vertcile class name [MainVerticle]:
+[INFO] Creating verticle MainVerticle
+[INFO] Creating directory /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service/src/main/java/com/redhat/qcon
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 34.510 s
+[INFO] Finished at: 2018-05-21T12:07:46-04:00
+[INFO] Final Memory: 9M/166M
+[INFO] ------------------------------------------------------------------------
+
+```
+
+This should create a complete Maven project with a pom.xml and a source folder, src, and a stubbed out Verticle, "MainVerticle."
+
+NOTE: Verticles are the basic unit of interaction in Vert.x.  Verticles extend AbstractVerticle and handle everything from serving JSON to functioning as an event bus.
+
+Open the MainVerticle.java class in your IDE (it is in the io.vertx.example package in the src directory.)
+
+[source,java]
+```
+package io.vertx.example;
+
+import io.vertx.core.AbstractVerticle;
+
+public class MainVerticle extends AbstractVerticle {
+
+    @Override
+    public void start() {
+
+    }
+
+}
+
+```
+
+Build the project by typing:
+
+```
+mvn clean package
+```
+
+Your build should complete successfully.  If it doesn't raise your hand and ask one of the Red Hat guys for help.
+
+```
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building my-vertx-project 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ my-vertx-project ---
+[INFO]
+[INFO] --- vertx-maven-plugin:1.0.13:initialize (vmp) @ my-vertx-project ---
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ my-vertx-project ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 0 resource
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ my-vertx-project ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 1 source file to /Users/jeremydavis/Desktop/vertx-starter/target/classes
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ my-vertx-project ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /Users/jeremydavis/Desktop/vertx-starter/src/test/resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ my-vertx-project ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ my-vertx-project ---
+[INFO] No tests to run.
+[INFO]
+[INFO] --- maven-jar-plugin:2.4:jar (default-jar) @ my-vertx-project ---
+[INFO] Building jar: /Users/jeremydavis/Desktop/vertx-starter/target/my-vertx-project-1.0-SNAPSHOT.jar
+[INFO]
+[INFO] --- vertx-maven-plugin:1.0.13:package (vmp) @ my-vertx-project ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 2.420 s
+[INFO] Finished at: 2018-06-22T21:24:09-04:00
+[INFO] Final Memory: 20M/311M
+[INFO] ------------------------------------------------------------------------
+```
+
+After your build completes you should have a shiny, new jar file in your "target" directory named "my-vertx-project-1.0-SNAPSHOT.jar."  If you entered creative values instead of accepting your the prompts your jar might have a cooler name.  For the sake of this tutorial we will assume you accepted the prompts.
+
+You are now ready to run Eclipse Vert.x.
+
+= Step 2 : Run Vert.x
+
+Run the shiny, new jar file from the terminal:
+
+```
+java -jar ./target/insult-service.jar
+```
+
+You should see the following output:
+
+```
+io.vertx.core.impl.launcher.commands.VertxIsolatedDeployer
+INFO: Succeeded in deploying verticle
+```
+Of course, the app isn't doing much yet.
+
+= Step 3 : Write a Test
+
+When you ran your jar file it execute a class named, "MainVerticle.java."  Our first step is to add functionality to this class.  In this workshop we will be following the RED-GREEN-REFACTOR pattern of Test Driven Development.  We will write a test, fail the test, and then implement enough functionality to make the test pass.
+
+JUnit is a first class citizen in Vert.x.  The vertx-unit library and Junit 4.12 have already been added to your pom.xml.
+
+```
+<dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>4.12</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-unit</artifactId>
+</dependency>
+```
+NOTE: We are using JUnit 4 here because JUnit 5 integration is currently tech preview.  The JUnit 5 functionality is really nice, and you can check it out later on the Vert.x site: https://vertx.io/docs/vertx-junit5/java/
+
+Create a new package in the test folder with the same name as the package containing MainVerticle ("io.vertx.example" if you accepted Maven's prompts on generation.)
+
+Create a new Java class named "MainVerticleTest" or something equally creative.  Type the following content:
+
+[source, java]
+```
+package com.redhat.qcon.insult;
+
+import io.vertx.core.Vertx;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+@RunWith(VertxUnitRunner.class) // 1
+public class MainVerticleTest {
+    private Vertx vertx; // 2
+
+    @Before
+    public void setUp(TestContext context) { // 3
+        vertx = Vertx.vertx();
+        vertx.deployVerticle(MainVerticle.class.getName(), context.asyncAssertSuccess());
+    }
+
+    @After
+    public void tearDown(TestContext context) { // 4
+        vertx.close(context.asyncAssertSuccess());
+    }
+
+    @Test
+    public void testMyApplication(TestContext context) {
+        final Async async = context.async(); // 5
+
+        vertx.createHttpClient().getNow(8080, "localhost", "/", response -> {
+            response.handler(body -> {
+                context.assertTrue(body.toString().contains("Hello, World!"));
+                async.complete(); // 6
+            });
+        });
+    }
+}
+```
+
+. @RunWith applies the Vert.x VertxUnitRunner.  A JUnit runner for writing asynchronous tests. Note : a runner is needed because when a rule statement is evaluated, it will run the before/test/after method and then test method is executed even if there are pending Async objects in the before method. The runner gives this necessary fine grained control.
+. an instance of Vertx to use in our test
+. JUnit's "setUp" method that in this class instantiates Vert.x and deploys our MainVerticle.java
+. JUnit's "tearDown" method that stops vertx and cleans up the TestContext.  The test context is used for performing test assertions and manage the completion of the test. This context is provided by vertx-unit as argument of the test case.
+. Async is an asynchronous exit point for the test.  It lets JUnit know when the test is actually complete.
+. async.complete() tells JUnit that we have finished our test
+
+Run your test either in your IDE or in a terminal.  If you don't see something like the following or something green raise your hand and ask one of the Red Hat guys for help:
+
+```
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running io.vertx.example.MainVerticleTest
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.729 sec
+
+Results :
+
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+```
+
+== Step 4: Add Functionality That Passes The Test  
+
+Swap out the void start method with the below method (as an astute reader you will notice that the following example is the entire class not just the method):
+
+[source, java]
+```
+package io.vertx.example;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
+
+public class MainVerticle extends AbstractVerticle {
+
+    @Override
+    public void start(Future<Void> startFuture) {
+        vertx.createHttpServer()
+             .requestHandler(req -> req.response().end("Hello, World!"))
+             .listen(8080, res -> {
+            if (res.succeeded()) {
+                startFuture.complete();
+            } else {
+                startFuture.fail(res.cause());
+            }
+        });
+    }
+}
+
+```
+
+Re-run the test either in your IDE or terminal. This time your test should pass.
+
+== Step 5: Fire it Up 
+
+Package your application by running:
+
+```
+mvn clean package
+```
+
+You should have a newer, shiny jar file in your target directory, which you can run with:
+
+```
+java -jar ./target/my-vertx-project-1.0-SNAPSHOT.jar
+```
+You should get the same message as before, but the result is more fun.  Open a browser and go to http://localhost:8080.  You should see the message, "Hello from my first Vert.x 3 application."
+
+image::hello_from_my_first_vertx_3_application.png[]
+

@@ -4,7 +4,7 @@ ifndef::icons[:conum-guard-java: // //]
 :conum-guard-groovy: //
 ifndef::icons[:conum-guard-groovy: // //]
 :icons: font
-:sectnumlevels: 5
+:sectnumlevels: 5InsultService.class
 :pdf-page-size: Letter
 :source-highlighter: rouge
 :rouge-theme: github
@@ -227,8 +227,37 @@ will all of the participants will be pasted into those channels.
 * https://gitter.im/rhoar-qcon-2018/Questions[Questions] - Ask Questions Here is we are not getting to you quickly enough
 * https://gitter.im/rhoar-qcon-2018/Feedback[Feedback] - Tell us what you liked (or didn't, S'ok we have thick skin)!
 
+== Conference WiFi SUCKS!
+Those of you who have been to many conferences are aware that conference wifi is terrible, slow, and overtaxed. To help prevent the slow conference wifi from slowing us down too much, we'll be using a local Nexus server for Maven artifacts. This will allow everyone to get cached versions of the required artifacts for local development without overstraining the hotel's WiFi.
+
+* SSID: rhoar-qcon-2018
+* KEY: ILikeReactiveJava
+
+[IMPORTANT]
+====
+This wifi provided for this talk is NOT very secure. Please do not expect to have reliable security on this network!
+====
+
+.Connect To The `rhoar-qcon-2018` wifi
+.In your home directory, ensure that the directory `.m2` exists
+.In the `<HOME>/.m2` directory, create a file `settings.xml`
+
+.settings.xml
+[source, xml]
+----
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <mirrors>
+    <mirror> <!--Send all requests to the public group -->
+      <id>nexus</id>
+      <mirrorOf>*</mirrorOf>
+      <url>http://192.168.10.5.nip.io/repository/maven-public/</url>
+    </mirror>
+  </mirrors>
+</settings>
+----
+
 <<<
-== Load A Complete DevOps Environment In Kubernetes
+== Exercise 1: Load A Complete DevOps Environment In Kubernetes
 
 [NOTE]
 ====
@@ -249,12 +278,15 @@ You can always download the latest OpenShift CLI tools from Github https://githu
 
 === Clone The Repositories
 
-. Open the `lab-infrastructure-as-code` repository https://github.com/rhoar-qcon-2018/lab-infrastructure-as-code[HERE]
-. Fork the repository to your own GitHub account
-. `git clone https://github.com/**YOUR_GITHUB_ACCOUNT_HERE**/lab-infrastructure-as-code.git`
-. Inside of the `lab-infrastructure-as-code` project, edit the `run-remote.sh` script and input your username for the cluster
+To simplify the process of getting all of the projects, we have created a Git project with Submodules. You can checkout the whole thing by running:
 
-.run-remote.sh
+.Clone Workshop Materials
+[source, bash]
+----
+git clone https://github.com/rhoar-qcon-2018/rhoar-kubernetes-qcon-2018.git --recurse-submodules
+----
+
+.Set Cluster Username
 [source, bash]
 ----
 export USERNAME='user<NUM>'
@@ -291,296 +323,47 @@ Server authentication token: <PASTE TOKEN HERE>
 SonarQube account login: <BLANK>
 
 SonarQube account password: <BLANK>
-===
 
 <<<
 == Load Applications Into CI/CD Environment
 
 
 <<<
-== Create A New Vert.x Project
+== Exercise 2: Creating A New Vert.x Project
 . Ensure that you have Apache Maven >= 3.3.9
-. Create an `insult-service` directory and run the following command
 
-.Executing Fabric8 Vert.x Plugin To Start A New Project
-[source,bash]
-----
-$ mvn io.fabric8:vertx-maven-plugin:1.0.13:setup -DvertxVersion=3.5.1
-[INFO] Scanning for projects...
-[INFO]
-[INFO] ------------------------------------------------------------------------
-[INFO] Building Maven Stub Project (No POM) 1
-[INFO] ------------------------------------------------------------------------
-[INFO]
-[INFO] --- vertx-maven-plugin:1.0.13:setup (default-cli) @ standalone-pom ---
-[INFO] No pom.xml found, creating it in /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service
-Set the project groupId [io.vertx.example]: com.redhat.qcon
-Set the project artifactId [my-vertx-project]: insult-service
-Set the project version [1.0-SNAPSHOT]: 1.0.0-SNAPSHOT
-Set the vertcile class name [MainVerticle]:
-[INFO] Creating verticle MainVerticle
-[INFO] Creating directory /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service/src/main/java/com/redhat/qcon
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 34.510 s
-[INFO] Finished at: 2018-05-21T12:07:46-04:00
-[INFO] Final Memory: 9M/166M
-[INFO] ------------------------------------------------------------------------
-----
+=== Download Our Skeleton Project
 
-This will create a new Maven POM file populated based on the values you entered during the setup.
+. Got to https://github.com/rhoar-qcon-2018/insult-service and *FORK* that project
+. Clone that *FORK* of the project locally `git clone https://github.com/<YOUR USER>/insult-service.git
 
-After the POM file has been created, we will need to add some additional libraries for this microservice:
-
-* vertx-web-api-contract
-* vertx-rx-java2
-* vertx-service-proxy
-* vertx-sockjs-service-proxy
-* vertx-config-kubernetes-configmap
-* vertx-codegen
-* vertx-lang-js
-
-All of these are within the `io.vertx` Maven group ID and covered via the dependency management setup
-from the initialization process, so we can put them in without versions as follows:
-
-.POM Excerpt Showing Provided and Processor Dependencies
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-web-api-contract</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-rx-java2</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-service-proxy</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-sockjs-service-proxy</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-config-kubernetes-configmap</artifactId>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-codegen</artifactId>
-    <scope>provided</scope>
-    <classifier>processor</classifier>
-</dependency>
-<dependency>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-lang-js</artifactId>
-    <scope>provided</scope>
-</dependency>
-----
-
-<<<
-=== Add New Project To GitHub
-Create a new repository on your GitHub account and check in your new project
-
-.Add Project To GitHub
-[source, bash]
-----
-$ cd insult-service
-$ git init
-$ git add pom.xml src
-$ git commit -am 'Initial import'
-$ git push origin master
-----
+[NOTE]
+====
+You CAN use the Vert.x Maven Plugin to create a project from scratch. If you are interested in this, please
+refer to the Appendix TODO Vert.x Maven Plugin
+====
 
 <<<
 === Set Up For Testing
 
-Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. Personally,
-I prefer BDD style tests, so for this workshop I will be demonstrating
-http://spockframework.org/spock/docs/1.1/index.html[SpockFramework]. To use Spock, we will need to
-add some additional dependencies to our POM:
+Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. A Open Innovation Labs, we
+prefer Behavior Driven Development (BDD), so for this project we will use
+http://spockframework.org/spock/docs/1.1/index.html[SpockFramework]. In order to use Spock, we need a few dependencies
+which have already been added in the skeleton:
 
-.Adding Libraries For Spock Framework and Code Coverage
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>org.codehaus.groovy</groupId>
-    <artifactId>groovy-all</artifactId>
-    <version>2.4.12</version>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>org.javassist</groupId>
-    <artifactId>javassist</artifactId>
-    <version>3.21.0-GA</version>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>org.spockframework</groupId>
-    <artifactId>spock-core</artifactId>
-    <version>1.1-groovy-2.4</version>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>net.bytebuddy</groupId>
-    <artifactId>byte-buddy</artifactId>
-    <version>1.7.5</version>
-    <scope>test</scope>
-</dependency>
-<dependency> <!-- enables mocking of classes without default constructor -->
-    <groupId>org.objenesis</groupId>
-    <artifactId>objenesis</artifactId>
-    <version>2.6</version>
-    <scope>test</scope>
-</dependency>
-----
+. Groovy - For writing/running test specifications
+. Spock Framework - For BDD
+. Objenesis - For Mocking
+. ByteBuddy - For Mocking Static/Final
 
 We will also need to add the GMavenPlus plugin and configure the Maven SureFire plugin to be able to
-run the Spock tests:
-
-.Add Maven Plugins For Spock Framework and Code Coverage
-[source,xml,subs=attributes+]
-----
-<build>
-    <plugins>
-    ... SNIP ...
-        <plugin>    <!-- Add support for compiling Groovy files -->
-            <groupId>org.codehaus.gmavenplus</groupId>
-            <artifactId>gmavenplus-plugin</artifactId>
-            <version>1.5</version>
-            <executions>
-                <execution>
-                    <goals>
-                        <goal>addSources</goal>
-                        <goal>addTestSources</goal>
-                        <goal>generateStubs</goal>
-                        <goal>compile</goal>
-                        <goal>testGenerateStubs</goal>
-                        <goal>testCompile</goal>
-                        <goal>removeStubs</goal>
-                        <goal>removeTestStubs</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
-        <plugin> <!-- Configure the Maven SureFire to use Groovy Spec files for test -->
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.6</version>
-            <configuration>
-                <useFile>false</useFile>
-                <includes>
-                    <include>**/*Spec.groovy</include>
-                </includes>
-            </configuration>
-        </plugin>
-        <plugin> <!-- Configure JaCoCo to be able to extract code coverage information -->
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.7.6.201602180812</version>
-            <executions>
-                <execution>
-                    <id>jacoco-initialize</id>
-                    <goals>
-                        <goal>prepare-agent</goal>
-                    </goals>
-                </execution>
-                <execution>
-                    <id>jacoco-site</id>
-                    <phase>test</phase>
-                    <goals>
-                        <goal>report</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
-    ... SNIP ...
-    </plugins>
-</build>
-----
+run the Spock tests. This is already configured in your POM from the skeleton project.
 
 <<<
-=== Create A Jenkins Pipeline
+== Create A Jenkins Pipeline
 With the latest versions of Jenkins, the new https://jenkins.io/doc/book/pipeline/syntax/[*_declarative pipeline syntax_*]
-has become the preferred way in which to define DevOps pipelines. Let's add a *_Jenkinsfile_* to our *_insult_* service
-and discuss how it works. In later steps we will add more capabilities to the pipeline to improve our ability to
-achieve better results faster.
-
-.Jenkinsfile
-[source,groovy,subs=attributes+]
-----
-pipeline {                                                  {conum-guard-groovy} <1>
-  agent {
-    label 'jenkins-slave-mvn'                               {conum-guard-groovy} <2>
-  }
-  stages {                                                  {conum-guard-groovy} <3>
-    stage('Compile') {
-      steps {
-        sh 'mvn compile'                                    {conum-guard-groovy} <4>
-      }
-    }
-    stage('Test') {
-      steps {
-        sh 'mvn test'                                       {conum-guard-groovy} <5>
-      }
-    }
-    stage('Build Image') {
-      steps {
-        script {
-          openshift.withCluster() {                         {conum-guard-groovy} <6>
-            openshift
-                .selector('bc', 'insult-service')
-                .startBuild('--from-file=target/insult-service.jar', '--wait')
-          }
-        }
-      }
-    }
-    stage('Promote to TEST') {
-      steps {
-        script {
-          openshift.withCluster() {                         {conum-guard-groovy} <7>
-            def ciProject = openshift.project()
-            def testProject = ciProject.replaceFirst(/^labs-ci-cd/, /labs-test/)
-            openshift.withProject(testProject) {
-              openshift.tag('insult-service:latest', "${testProject}/insult-service:latest")
-            }
-          }
-        }
-      }
-    }
-    stage('Promote to DEMO') {
-      input {                                               {conum-guard-groovy} <8>
-        message "Promote service to DEMO environment?"
-        ok "PROMOTE"
-      }
-      steps {
-        script {
-          openshift.withCluster() {                         {conum-guard-groovy} <9>
-            def ciProject = openshift.project()
-            def demoProject = ciProject.replaceFirst(/^labs-ci-cd/, /labs-demo/)
-            openshift.withProject(demoProject) {
-              openshift.tag('insult-service:latest', "${demoProject}/insult-service:latest")
-            }
-          }
-        }
-      }
-    }
-  }
-}
-----
-<1> All declarative pipelines start with `pipeline` as the top-level closure
-<2> Use the `agent` block to select the appropriate Pod definition to build your project
-<3> Define different stages to track the progress of the pipeline
-<4> Compile the code using Maven
-<5> Test the code using the Maven SureFire plugin configured to use SpockFramework
-<6> Use the OpenShift plugin and DSL to trigger a Source-2-Image binary build from our resulting FatJAR
-<7> Tag the resulting container image into the `TEST` project (Thus triggering a redeployment)
-<8> Ask if the service should be promoted to the `DEMO` environment
-<9> Tag the resulting container image into the `DEMO` project (Thus triggering a redeployment)
-
-You can see that it is relatively quick and easy to chain operations together to handle the manual work of building
-and testing software before automatically deploying to a "production" environment.
+has become the preferred way in which to define DevOps pipelines. The skeleton project you checked out earlier has a
+very complete Jenkins pipeline which we will discuss in detail as we go along.
 
 === Add The Pipeline To OpenShift
 Part of our Ansible automation which was run this morning created a template for pipeline builds. If you go into your
@@ -712,7 +495,7 @@ Every time a change gets pushed to *_master_* or a pull request gets merged to *
 will fire this webhook and thus trigger a Jenkins pipeline build in OpenShift.
 
 <<<
-=== Basic Vert.x Concepts
+== Basic Vert.x Concepts
 
 The https://vertx.io/docs/vertx-core/java/[Vert.x Core Documentation] is a really great reference to some of the basic
 concepts in Vert.x. We'll cover a few of these things here, but please feel free to go to the official docs for more
@@ -741,7 +524,7 @@ To support this, Vert.x provides non-blocking implementations of many common ope
 * Authentication/Authorization/Audit (AAA)
 * Metrics
 
-==== Verticles
+=== Verticles
 From the new project we generated via Maven, we can see that a class called `MainVerticle` was created.
 https://vertx.io/docs/vertx-core/java/#_verticles[Verticles] are the basic unit of an application in Vert.x. By default,
 Verticles are run single-threaded on an event loop (Reactor Pattern). The one difference between this and other Reactor
@@ -766,7 +549,7 @@ public class MainVerticle extends AbstractVerticle {
 }
 ----
 
-==== Non-Blocking
+=== Non-Blocking
 Because Vert.x uses event loops for Verticles, we must always ensure that we do not call blocking code and thus block
 the event loop. Since Vert.x does not have non-blocking APIs for every situation, it provides a method of
 implementing traditional blocking Java code using the `vertx.executeBlocking` method. For example, if we wanted to make a
@@ -784,7 +567,7 @@ vertx.executeBlocking(future -> {
 ----
 
 [#event-bus-intro]
-==== Event Bus
+=== Event Bus
 The final concept we should introduce for Vert.x is the Event Bus. Since all of the Verticles are implemented to
 run single-threaded and potentially across multiple threads/cores in parallel, we need a safe way to share data which
 will not cause race conditions or concurrency problems. To facilitate this, Vert.x has an Event Bus through which we
@@ -809,14 +592,18 @@ vertx.timerStream(300)
 ----
 
 <<<
-=== Implement Kubernetes Config
+== Implement Kubernetes Config
 Following one of the tenets of https://12factor.net/config[12 Factor Applications], we will want to store our
 application's configuration in the deployment environment instead of in our code. Vert.x makes this somewhat painless
 by providing a comprehensive set of APIs for loading the application's configuration. In our case, since we are
-deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration.
+deploying to Kubernetes, we will use Kubernetes ConfigMaps for our configuration. This feature is already implemented in
+our skeleton project which we cloned earlier. You can look at the code in the
 
 Another best practice is that we should practice "test first" development. To further that concept, let's start
-by writing a failing test for the feature we intent to implement.
+by writing a failing test for the feature we intend to implement.
+
+Inside of the `insult-service` project, create the directory path `src/test/groovy/com/redhat/qcon`. Inside of that
+directory, we will create the following file.
 
 .src/test/groovy/com/redhat/qcon/MainVerticleSpec.groovy
 [source,groovy,subs=attributes+]
@@ -831,28 +618,28 @@ import spock.util.concurrent.AsyncConditions
 class MainVerticleSpec extends Specification {
 
     def 'Test Vert.x configuration loading'() {
-            given: 'An instance of Vert.x'  {conum-guard-groovy} <1>
+            given: 'An instance of Vert.x'                      {conum-guard-groovy} <1>
                 def vertx = Vertx.vertx()
-            and: 'An instance of a Vert.x Future'  {conum-guard-groovy} <2>
+            and: 'An instance of a Vert.x Future'               {conum-guard-groovy} <2>
                 def fut = Future.future()
             and: '''An instance of Spock's AsyncConditions'''
-                def async = new AsyncConditions(1)          {conum-guard-groovy} <4>
+                def async = new AsyncConditions(1)              {conum-guard-groovy} <4>
 
-            when: 'We attempt to deploy the main Verticle'  {conum-guard-groovy} <3>
+            when: 'We attempt to deploy the main Verticle'      {conum-guard-groovy} <3>
                 vertx.deployVerticle(new MainVerticle(), fut.completer())
 
             then: 'Expect that the correct configuration is found and loaded'
                 fut.setHandler({ res ->
-                    async.evaluate {                                        {conum-guard-groovy} <5>
+                    async.evaluate {                            {conum-guard-groovy} <5>
                         def config = vertx.getOrCreateContext().config()
-                        assert res.succeeded() {conum-guard-groovy} <6>
-                        assert config.hasProperty('insult') {conum-guard-groovy} <7>
-                        assert config.hasProperty('adjective') {conum-guard-groovy} <8>
-                        assert config.hasProperty('http') {conum-guard-groovy} <9>
+                        assert res.succeeded()                  {conum-guard-groovy} <6>
+                        assert config.hasProperty('insult')     {conum-guard-groovy} <7>
+                        assert config.hasProperty('adjective')  {conum-guard-groovy} <8>
+                        assert config.hasProperty('http')       {conum-guard-groovy} <9>
                     }
                 })
 
-            cleanup: 'Await the async operations'  {conum-guard-groovy} <10>
+            cleanup: 'Await the async operations'               {conum-guard-groovy} <10>
                 async.await(3600)
                 vertx.close()
         }
@@ -872,9 +659,10 @@ class MainVerticleSpec extends Specification {
 Spock tests are written using a format known as Gherkin. Gherkin formats tests as given-when-then. Spock also has
 a format for writing data-driven tests which we will use and explain later.
 
-Now that we have written our test, here's how I would implement the feature code.
+Now that we have written our test, here's how I would implement the feature code. Inside of the `src/main/java` directory
+of our `insult-service` project; w e'll create a new package directory `src/main/java/com/redhat/qcon/insult/services`.
 
-.Implementing Kubernetes ConfigMap Support
+.MainVerticle.java
 [source,java,subs=attributes+]
 ----
 package com.redhat.qcon;
@@ -893,25 +681,26 @@ public class MainVerticle extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MainVerticle.class);
 
-    Maybe<JsonObject> initConfigRetriever() {                                   {conum-guard-groovy} <1>
+    Maybe<JsonObject> initConfigRetriever() {
         // Load the default configuration from the classpath
         LOG.info("Configuration store loading.");
-        ConfigStoreOptions defaultOpts = new ConfigStoreOptions()               {conum-guard-groovy} <2>
+        ConfigStoreOptions defaultOpts = new ConfigStoreOptions()
                 .setType("file")
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "insult_default_config.json"));
 
         // Load container specific configuration from a specific file path inside of the
         // container
-        ConfigStoreOptions localConfig = new ConfigStoreOptions()               {conum-guard-groovy} <3>
+        ConfigStoreOptions localConfig = new ConfigStoreOptions()
                 .setType("file")
                 .setFormat("json")
                 .setConfig(new JsonObject().put("path", "/opt/docker_config.json"))
                 .setOptional(true);
 
-        // When running inside of Kubernetes, configure the application to also load from
-        // a ConfigMap
-        ConfigStoreOptions confOpts = new ConfigStoreOptions()                  {conum-guard-groovy} <4>
+        // When running inside of Kubernetes, configure the application to also load
+        // from a ConfigMap. This config is ONLY loaded when running inside of
+        // Kubernetes or OpenShift
+        ConfigStoreOptions confOpts = new ConfigStoreOptions()
                 .setType("configmap")
                 .setConfig(new JsonObject()
                         .put("name", "insult-config")
@@ -919,15 +708,12 @@ public class MainVerticle extends AbstractVerticle {
                 );
 
         // Add the default and container config options into the ConfigRetriever
-        ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()  {conum-guard-groovy} <5>
+        ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()
                 .addStore(defaultOpts)
-                .addStore(localConfig)
                 .addStore(confOpts);
 
         // Create the ConfigRetriever and return the Maybe when complete
-        return ConfigRetriever.create(vertx, retrieverOptions)
-                              .rxGetConfig()
-                              .toMaybe();                                       {conum-guard-groovy} <6>
+        return ConfigRetriever.create(vertx, retrieverOptions).rxGetConfig().toMaybe();
     }
 
     @Override
@@ -976,7 +762,7 @@ time and resources for little gain. You should, however, aim to cover all critic
 ====
 
 <<<
-=== Configure Vert.x Clustering With Infinispan/JGroups
+== Configure Vert.x Clustering With Infinispan/JGroups
 A really impressive feature we can use in Vert.x is it's low-level support for clustering and distributed processing
 using the Event Bus. Vert.x supports a few different cluster manager implementations like
 https://vertx.io/docs/vertx-hazelcast/java[Hazelcast], https://vertx.io/docs/vertx-infinispan/java[Infinispan],
@@ -995,37 +781,15 @@ applications.
 
 
 ==== Add Clustering Dependencies
-For this workshop, since we are using Kubernetes, we will use the Infinispan Cluster Manager by adding the following
-dependency
-
-.pom.xml Snippet
-[source,xml]
-----
-    <dependencies>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-infinispan</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.infinispan</groupId>
-          <artifactId>infinispan-cloud</artifactId>
-          <version>9.1.3.Final</version>
-        </dependency>
-        <dependency>
-          <groupId>org.jgroups.kubernetes</groupId>
-          <artifactId>jgroups-kubernetes</artifactId>
-          <version>1.0.3.Final</version>
-        </dependency>
-        ...SNIP...
-----
-
+For this workshop, since we are using Kubernetes, we will use the Infinispan Cluster Manager. The Maven dependecies
+have already been added to your project POM as part of the skeleton project.
 
 When running locally, we can just add `--cluster` to the execution of the fat-jar and Infinispan+JGroups will automatically
 discover other Vert.x nodes on the same network segment via Multicast DNS (MCAST_PING).
 
 ==== Clustering Inside Kubernetes/OpenShift
-When running inside of Kubernetes or OpenShift, we change the config with the system property
-`-Dvertx.jgroups.config=default-configs/default-jgroups-kubernetes.xml`.
+When running inside of Kubernetes or OpenShift, we change the config with the system properties
+`-Dvertx.jgroups.config=default-configs/default-jgroups-kubernetes.xml -Djava.net.preferIPv4Stack=true`.
 
 In our deployment environment, we need to set the `default` service account to have `view` role inside of the
 namespace and also set the `KUBERNETES_NAMESPACE` environment variable. With these changes in place, the Vert.x Pods
@@ -1047,7 +811,86 @@ Kubernetes specific config as the cluster will allow Multicast DNS discovery ins
 ====
 
 <<<
-=== Implement A New https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
+== Implement A New https://vertx.io/docs/vertx-service-proxy/java/[Service Proxy]
+
+=== Setup Groovy and the SpockFramework
+
+We are already following the RED-GREEN-REFACTOR pattern of Test Driven Development.  We've already used Vert.x' JUnit-compatible library vertx-unit.  
+
+At Red Hat's Open Innovation Labs, we prefer BDD style tests.  For most apps we like the Cucumber Framework.  Asynchronous testing is different though, and Eclipse Vert.x is asynchronous.  For this lab we wil use the SpockFramework which has excellent support for asynchronous testing.   
+
+The Spock dependencies have already been added to our POM but are listed below so that you can familiarize yourself with them.
+
+----
+<!-- Optional dependencies for using Spock -->
+<dependency> <!-- use a specific Groovy version rather than the one specified by spock-core -->
+    <groupId>org.codehaus.groovy</groupId>
+    <artifactId>groovy-all</artifactId>
+    <version>2.4.13</version>
+</dependency>
+<dependency> <!-- enables mocking of classes (in addition to interfaces) -->
+    <groupId>net.bytebuddy</groupId>
+    <artifactId>byte-buddy</artifactId>
+    <version>1.6.5</version>
+    <scope>test</scope>
+</dependency>
+<dependency> <!-- enables mocking of classes without default constructor (together with CGLIB) -->
+    <groupId>org.objenesis</groupId>
+    <artifactId>objenesis</artifactId>
+    <version>2.5.1</version>
+    <scope>test</scope>
+</dependency>
+----
+Spock is written in Groovy, and we have also added the gmavenplus-plugin and the Surefire and JaCoCo plugins for tests and code coverage:
+
+----
+<plugin>
+    <!-- The gmavenplus plugin is used to compile Groovy code. To learn more about this plugin,
+    visit https://github.com/groovy/GMavenPlus/wiki -->
+    <groupId>org.codehaus.gmavenplus</groupId>
+    <artifactId>gmavenplus-plugin</artifactId>
+    <version>1.6</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>compile</goal>
+                <goal>compileTests</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+<plugin>    <!-- Configure the Maven SureFire plugin to use Groovy Spec files for test -->
+    <artifactId>maven-surefire-plugin</artifactId>
+    <version>2.20.1</version>
+    <configuration>
+        <useFile>false</useFile>
+        <includes>
+            <include>**/*Spec.java</include>
+        </includes>
+    </configuration>
+</plugin>
+<plugin>    <!-- Configure JaCoCo to be able to extract code coverage information -->
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.7.6.201602180812</version>
+    <executions>
+        <execution>
+            <id>jacoco-initialize</id>
+            <goals>
+                <goal>prepare-agent</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>jacoco-site</id>
+            <phase>test</phase>
+            <goals>
+                <goal>report</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+----
+
 Vert.x provides a facility to make it easier to consume/produce messages on the Event Bus. In the first
 <<event-bus-intro, event bus example>> of sending and receiving on the event bus, we used a producer and a consumer based on
 rx-java2. Setting each of these various endpoints can become tedious and does not provide the best developer
@@ -1070,7 +913,7 @@ In order for the Vert.x code generation to work, we need to annotate the package
 processed. We do this by creating a `package-info.java` file. You should place this file deep enough in the hierarchy
 that will prevent most of the code from being considered, but high enough that you can process all required code:
 
-.src/main/java/com/redhat/qcon/services/package-info.java
+.src/main/java/com/redhat/qcon/insult/services/package-info.java
 [source,java,subs=attributes+]
 ----
 @ModuleGen(name = "insult", groupPackage = "com.redhat.qcon.insult.services")
@@ -1079,13 +922,22 @@ package com.redhat.qcon.insult.services;
 import io.vertx.codegen.annotations.ModuleGen;
 ----
 
+[NOTE]
+====
+If you are using an IDE like Eclipse or IntelliJ, you will need to ensure that you enable annotation
+processing for the Java compiler. Vert.x uses the annotation processor to generate implementation code
+for Service Proxy implementations. Depending on which Vert.x language modules you have included in your
+Maven dependencies, Vert.x will generate Service Proxy client code for each supported language runtime like:
+JavaScript, RxJava, Kotlin, etc...
+====
+
 ==== The Interface
 All service proxies start with an Interface definition which looks something like this:
 
-.src/main/java/com/redhat/qcon/services/insult/InsultService.java
+.src/main/java/com/redhat/qcon/insult/services/InsultService.java
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult;
+package com.redhat.qcon.insult.services;
 
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.codegen.annotations.ProxyGen;
@@ -1159,10 +1011,10 @@ using http://spockframework.org/spock/docs/1.1/index.html[Spock Framework] in or
 Spock Specifications are quite easy to write and lend themselves to readability. We start off with a Groovy class which
 extends `Specification`.
 
-.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
+.src/test/groovy/com/redhat/qcon/insult/services/InsultServiceImplSpec.groovy
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult
+package com.redhat.qcon.insult.services
 
 import spock.lang.Specification
 
@@ -1182,17 +1034,33 @@ Any resources which you would want to re-use across tests will need to be define
 `@Shared`, otherwise Spock will prevent the tests from running. This is to ensure that you don't accidentally re-use
 state without being explicit. `static final` field are acceptable too.
 
-.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
+.src/test/groovy/com/redhat/qcon/insult/services/InsultServiceImplSpec.groovy
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult
+package com.redhat.qcon.insult.services
 
-import spock.lang.Specification
+import com.redhat.qcon.insult.services.InsultServiceImpl
 import io.specto.hoverfly.junit.core.Hoverfly
 import io.specto.hoverfly.junit.core.SimulationSource
-import spock.lang.Shared
-import io.vertx.core.json.JsonObject
 import io.vertx.core.Vertx
+import io.vertx.core.json.JsonObject
+import io.vertx.reactivex.circuitbreaker.CircuitBreaker
+import io.vertx.reactivex.core.CompositeFuture
+import io.vertx.serviceproxy.ServiceException
+import spock.lang.Shared
+import spock.lang.Specification
+import spock.lang.Unroll
+import spock.util.concurrent.AsyncConditions
+
+import java.util.concurrent.TimeUnit
+
+import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON
+import static io.specto.hoverfly.junit.core.HoverflyConfig.localConfigs
+import static io.specto.hoverfly.junit.core.HoverflyMode.SIMULATE
+import static io.specto.hoverfly.junit.core.SimulationSource.*
+import static io.specto.hoverfly.junit.dsl.HoverflyDsl.*
+import static io.specto.hoverfly.junit.dsl.ResponseCreators.serverError
+import static io.specto.hoverfly.junit.dsl.ResponseCreators.success
 
 class InsultServiceImplSpec extends Specification {
 
@@ -1221,7 +1089,7 @@ To implement the simulations in Hoverfly, we use the
 http://hoverfly.readthedocs.io/projects/hoverfly-java/en/latest/pages/corefunctionality/dsl.html[Hoverfly DSL] to
 define a `SimulationSource`.
 
-.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
+.src/test/groovy/com/redhat/qcon/insult/services/InsultServiceImplSpec.groovy
 [source,java,subs=attributes+]
 ----
     // -- SNIP --
@@ -1285,7 +1153,7 @@ define a `SimulationSource`.
 
 Now that we have set up the simulations for the dependent services, we can write our specification test.
 
-.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.groovy
+.src/test/groovy/com/redhat/qcon/insult/services/InsultServiceImplSpec.groovy
 [source,java,subs=attributes+]
 ----
     @Unroll                                                                 {conum-guard-groovy} <9>
@@ -1351,16 +1219,18 @@ You'll also notice that we can test 3 different scenarios with the same code by 
 different data into the table. We could add as many of these as we like to ensure we
 cover the critical paths.
 
+And when we run our newly created test specification, we should see that all 3 tests fail. [big red]#RED#, just as expected. 
+
 <<<
 ==== Creating The Service Implementation
 
 We can now create a class which implements our interface. We have left the service implementation class as a stub so
 that we can delve deeper into HTTP clients in the next section.
 
-.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult;
+package com.redhat.qcon.insult.services;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -1376,7 +1246,7 @@ public class InsultServiceImpl implements InsultService {
      */
     @Override
     public void getREST(Handler<AsyncResult<JsonObject>> insultGetHandler) {
-        throw new Exception("Not Implemented");
+        insultGetHandler.handle(Future.failedFuture(new Exception("Not Implemented")));
     }
 
     /**
@@ -1387,7 +1257,7 @@ public class InsultServiceImpl implements InsultService {
      */
     @Override
     public InsultService publish(JsonObject insult, Handler<AsyncResult<Void>> handler) {
-        throw new Exception("Not Implemented");
+        handler.handle(Future.failedFuture(new Exception("Not Implemented")));
     }
 }
 ----
@@ -1421,11 +1291,11 @@ client.get("/some/path")
             return resp;
         })
         .map(HttpResponse::bodyAsJsonObject)
-        .doOnError(e -> {
-            // Handle exceptions
-        })
         .subscribe(json -> {
             // Handle successful JSON response body
+        },
+        e -> {
+            // Handle exceptions
         });
 ----
 
@@ -1467,10 +1337,10 @@ This code is simple to test and easier to read. As we go forward, this is the pa
 ==== Implementing the Insult Service Using Web Client
 Now, let's implement some methods so that we can make requests to our associated microservices and retrieve the results.
 
-.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
-package com.redhat.qcon.insult.services.insult;
+package com.redhat.qcon.insult.services;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -1582,7 +1452,7 @@ public class InsultServiceImpl implements InsultService {
 We have defined some new methods which allow us to make HTTP requests and return `Future`s for asynchronous interaction.
 These futures can then be composed in another method:
 
-.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
     // -- SNIP --
@@ -1657,10 +1527,7 @@ single `JsonObject`.
 
 ==== Consuming A Service Proxy API From Another Vert.x Service
 
-There is a third microservice implemented for you which we will need to interact with.
-This service is implemented in Vert.x and uses Service Proxies. Since it is implemented
-with Service Proxies, we can consume that service using the Service Proxy client which
-is generated for us by Vert.x's Code Generation.
+There is a third microservice implemented for you which we will need to interact with. This service is implemented in Vert.x and uses Service Proxies. Since it is implemented with Service Proxies, we can consume that service using the Service Proxy client which is generated for us by Vert.x's Code Generation.
 
 <<<
 First, add the library for the service proxy client:
@@ -1677,9 +1544,9 @@ First, add the library for the service proxy client:
         <!-- SNIP -->
 ----
 
-Next, we can create an instance of the Service Proxy from our application.
+This artifact is available from the Nexus server which is on our workshop WiFi network. If you cannot get this artifact, you can compile and install it locally by running `mvn clean package install` inside of the `kafka-service` project. Next, we can create an instance of the Service Proxy from our application.
 
-.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
 public class InsultServiceImpl implements InsultService {
@@ -1775,49 +1642,36 @@ our new capability. We'll modify the test result for the delayed response test s
 we expect a circuit breaker result instead of a normal success response.
 
 
-.src/test/groovy/com/redhat/qcon/services/insult/InsultServiceImplSpec.java
+.src/test/groovy/com/redhat/qcon/insult/services/InsultServiceImplSpec.java
 [source,java,subs=attributes+]
 ----
     static final SimulationSource GET_RESP_THREE = dsl(
-            service('localhost')
+            service('noun-service')
                     .get('/api/v1/noun')
                     .willReturn(success(NOUN_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())
-                                    .withDelay(1, TimeUnit.SECONDS)),
-            service('localhost')
+                                    .withDelay(10, TimeUnit.SECONDS)),
+            service('adjective-service')
                     .get("/api/v1/adjective")
                     .willReturn(success(ADJ_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())))
 
     static final SimulationSource GET_RESP_FOUR = dsl(
-            service('localhost')
+            service('noun-service')
                     .get('/api/v1/noun')
                     .willReturn(success(NOUN_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())),
-            service('localhost')
+            service('adjective-service')
                     .get("/api/v1/adjective")
                     .willReturn(success(ADJ_RESPONSE_BODY_ONE,
                                         APPLICATION_JSON.toString())
-                                    .withDelay(1, TimeUnit.SECONDS)))
+                                    .withDelay(10, TimeUnit.SECONDS)))
+
+    // -- SNIP --
 
     @Unroll
-    def 'Test getting a noun: #description'() {
-        setup: 'Http Client Config to work with Hoverfly'
-            def httpClientConfig = new JsonObject()
-                    .put('noun',
-                    new JsonObject().put('host', 'localhost')
-                            .put('ssl', false)
-                            .put('port', 80)
-                            .put('proxyOptions', proxyOptions)
-            )
-                    .put('adjective',
-                    new JsonObject().put('host', 'localhost')
-                            .put('ssl', false)
-                            .put('port', 80)
-                            .put('proxyOptions', proxyOptions)
-            )
-
-        and: 'Create the service under test'
+    def 'Test getting an insult: #description'() {
+        setup: 'Create the service under test'
             InsultServiceImpl underTest = new InsultServiceImpl(vertx, httpClientConfig)
 
         and: 'AsyncConditions'
@@ -1831,20 +1685,23 @@ we expect a circuit breaker result instead of a normal success response.
                 conds.evaluate {
                     assert succeeded == res.succeeded()
                     def body = res?.result()
-                    assert body?.getJsonArray('adjectives')?.getAt(0) == adjective
+                    assert body?.getString('adj1') == adjective
+                    assert body?.getString('adj2') == adjective
                     assert body?.getString('noun') == noun
                 }
             })
 
         expect: 'The appropriate response to REST calls'
-        conds.await(10)
+            conds.await(15)
+            hoverfly.resetJournal()
+            hoverfly.reset()
 
         where: 'The following data is applied'
-            simulation         | description    || succeeded | adjective   | noun
-            GET_RESP_ONE   | 'Happy path'   || true      | 'adjective' | 'noun'
-            GET_RESP_TWO   | 'Server error' || false     | null        | null
-            GET_RESP_THREE | 'Slow reply'   || true      | 'adjective' | '[timeout]'
-            GET_RESP_FOUR  | 'Slow reply'   || true      | '[timeout]' | 'noun'
+            simulation     | description       || succeeded | adjective   | noun
+            GET_RESP_ONE   | 'Happy path'      || true      | 'adjective' | 'noun'
+            GET_RESP_TWO   | 'Server error'    || true      | '[failure]' | '[failure]'
+            GET_RESP_THREE | 'Slow adj reply'  || true      | 'adjective' | '[failure]'
+            GET_RESP_FOUR  | 'Slow noun reply' || true      | '[failure]' | 'noun'
     }
 ----
 
@@ -1854,7 +1711,7 @@ the circuit breakers.
 Let's have a look at how we would add circuit breakers to the
 method which calls the adjective service.
 
-.src/main/java/com/redhat/qcon/services/insult/InsultServiceImpl.java
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
 [source,java,subs=attributes+]
 ----
     private final CircuitBreaker adjBreaker;
@@ -1866,36 +1723,44 @@ method which calls the adjective service.
      * @param config The {@link JsonObject} configuration for this service
      */
     public InsultServiceImpl(io.vertx.core.Vertx vertx, JsonObject config) {
+        this.config = config;
 
         kafka = KafkaService.createProxy(Vertx.newInstance(vertx), "kafka.service");
 
-        JsonObject nounConfig = config.getJsonObject("noun");
-        JsonObject adjConfig = config.getJsonObject("adjective");
+        nounHost = config.getJsonObject("noun").getString("host");
+        nounPort = config.getJsonObject("noun").getInteger("port");
+
+        adjHost = config.getJsonObject("adjective").getString("host");
+        adjPort = config.getJsonObject("adjective").getInteger("port");
+
         this.vertx = Vertx.newInstance(vertx);
-        WebClientOptions nounClientOpts = new WebClientOptions(nounConfig)
-                .setLogActivity(true);
-        WebClientOptions adjClientOpts = new WebClientOptions(adjConfig)
-                .setLogActivity(true);
-        nounClient = WebClient.create(this.vertx, nounClientOpts);
-        adjClient = WebClient.create(this.vertx, adjClientOpts);
-                        .fallback(t -> new JsonObject().put("noun", "[open]"))
+
+        WebClientOptions clientOpts = new WebClientOptions()
+                .setLogActivity(false);
+        if (config.containsKey("proxyOptions")) {
+            clientOpts.setProxyOptions(new ProxyOptions(config.getJsonObject("proxyOptions")));
+        }
+        webClient = WebClient.create(this.vertx, clientOpts);
 
         CircuitBreakerOptions breakerOpts = new CircuitBreakerOptions()
                                                     .setFallbackOnFailure(true)
-                                                    .setMaxFailures(3)
-                                                    .setMaxRetries(3)
-                                                    .setResetTimeout(15000)
-                                                    .setTimeout(250);
+                                                    .setMaxFailures(2)
+                                                    .setMaxRetries(2)
+                                                    .setResetTimeout(RESET_TIMEOUT)
+                                                    .setTimeout(CIRCUIT_TIMEOUT);
 
         adjBreaker = CircuitBreaker
                         .create("adjBreaker", Vertx.newInstance(vertx), breakerOpts)
-                        .openHandler(t -> new JsonObject().put("adj", "[open]"))
-                        .fallback(t -> new JsonObject().put("adj", "[failure]"));
+                        .openHandler(t -> circuitBreakerHandler("adj", "[open]"));
 
         nounBreaker = CircuitBreaker
                         .create("nounBreaker", Vertx.newInstance(vertx), breakerOpts)
-                        .openHandler(t -> new JsonObject().put("noun", "[open]"))
-                        .fallback(t -> new JsonObject().put("noun", "[failure]"));
+                        .openHandler(t -> circuitBreakerHandler("noun", "[open]"));
+    }
+
+    public JsonObject circuitBreakerHandler(String key, String value) {
+        LOG.error("Timeout requesting '{}', returned '{}'", key, value);
+        return new JsonObject().put(key, value);
     }
 
     /**
@@ -1903,13 +1768,19 @@ method which calls the adjective service.
      * @return A {@link Future} of type {@link JsonObject} which will contain an adjective on success
      */
     io.vertx.reactivex.core.Future<JsonObject> getAdjective() {
-        return adjBreaker.execute(fut ->
-            adjClient.get("/api/v1/adjective")
-                     .timeout(HTTP_CLIENT_TIMEOUT)
-                     .rxSend()
-                     .flatMapMaybe(InsultServiceImpl::mapStatusToError)
-                     .map(HttpResponse::bodyAsJsonObject)
-                     .subscribe(fut::complete, fut::fail));
+        return adjBreaker.executeWithFallback(fut ->
+            webClient.get(adjPort, adjHost, "/api/v1/adjective")
+                    .timeout(HTTP_CLIENT_TIMEOUT)
+                    .rxSend()
+                    .doOnError(e -> LOG.error("REST Request failed", e))
+                    .flatMapMaybe(InsultServiceImpl::mapStatusToError)
+                    .map(HttpResponse::bodyAsJsonObject)
+                    .subscribe(
+                            fut::complete,
+                            fut::fail
+                    ),
+                t -> circuitBreakerHandler("adjective", "[failure]")
+        );
     }
 ----
 
@@ -1987,16 +1858,9 @@ components:
       properties:
         noun:
           type: string
-        adj:
-          type: array
-          items:
-            type: string
-    insultrequest:
-      type: object
-      required:
-      - name
-      properties:
-        name:
+        adj1:
+          type: string
+        adj2:
           type: string
 ----
 
@@ -2006,10 +1870,6 @@ The YAML itself is only somewhat helpful for understanding the API. It is VERY u
 to visualize the Spec in https://editor.swagger.io/[Swagger Editor]. It is highly
 recommended that you paste the code above into that editor to view the API specification.
 ====
-
-<<<
-=== Write Tests For The MainVerticle
-
 
 <<<
 === Adding The OpenAPI Router Factory To The MainVerticle
@@ -2025,25 +1885,31 @@ The first step is to create an instance of the OpenAPI3RouterFactory:
 .src/main/java/com/redhat/qcon/insult/MainVerticle.java
 [source,java,subs=attributes+]
 ----
+    public static final String INSULT_SERVICE_ADDRESS = "insult.service";
+    public static final String INSULT_API_SPEC_YAML = "/insult-api-spec.yaml";
+
     /**
      * Begin the creation of the {@link OpenAPI3RouterFactory}
+     *
      * @param config The config loaded via the {@link ConfigRetriever}
-     * @return An {@link OpenAPI3RouterFactory} {@link Future} to be used to complete
-     *         the next Async step
+     * @return An {@link OpenAPI3RouterFactory} {@link Future} to be used to
+     *         complete the next Async step
      */
     private Maybe<OpenAPI3RouterFactory> provisionRouter(JsonObject config) {
-        // Merge the loaded configuration into the config for this Verticle
-        config().mergeIn(config);
+            // Merge the loaded configuration into the config for this Verticle
+            loadedConfig = config().mergeIn(config);
 
-        // Instantiate the Insult Service and bind it to the event bus
-        InsultServiceImpl nonRx = new InsultServiceImpl(vertx.getDelegate(), config);
-        new ServiceBinder(vertx.getDelegate())
-                .setAddress("insult.service")
-                .register(com.redhat.qcon.insult.services.insult.InsultService.class, nonRx);
+            if (LOG.isInfoEnabled()) {
+                    LOG.info("Config Loaded: {}", loadedConfig.encodePrettily());
+            }
 
-        // Create the OpenAPI3RouterFactory using the API specification YAML file
-        return OpenAPI3RouterFactory.rxCreate(vertx, "/insult-api-spec.yaml")
-                .toMaybe();
+            // Instantiate the Insult Service and bind it to the event bus
+            InsultServiceImpl nonRx = new InsultServiceImpl(vertx.getDelegate(), loadedConfig);
+            new ServiceBinder(vertx.getDelegate()).setAddress(INSULT_SERVICE_ADDRESS)
+                            .register(com.redhat.qcon.insult.services.InsultService.class, nonRx);
+
+            // Create the OpenAPI3RouterFactory using the API specification YAML file
+            return OpenAPI3RouterFactory.rxCreate(vertx, INSULT_API_SPEC_YAML).toMaybe();
     }
 ----
 
@@ -2059,81 +1925,96 @@ service proxy interfaces for the front-end web application.
 ----
     /**
      * Wire the {@link OpenAPI3RouterFactory} into the HTTP Server
+     *
      * @param factory The {@link OpenAPI3RouterFactory} created in the previous step
      * @return An {@link HttpServer} if successful
      */
     Maybe<HttpServer> provisionHttpServer(OpenAPI3RouterFactory factory) {
-        // Configure the HTTP Server options
-        // - Listen on port 8080 on all interfaces using HTTP2 protocol
-        HttpServerOptions httpOpts = new HttpServerOptions().setUseAlpn(true)
-                .setHost("0.0.0.0")
-                .setPort(8080)
-                .setLogActivity(true);
+            // Configure the HTTP Server options
+            // - Listen on port 8080 on all interfaces using HTTP2 protocol
+            HttpServerOptions httpOpts = new HttpServerOptions()
+                            .setHost(loadedConfig.getJsonObject("http").getString("address"))
+                            .setPort(loadedConfig.getJsonObject("http").getInteger("port")).setReuseAddress(true)
+                            .setSoLinger(0).setLogActivity(true);
 
-        // Create a proxy instance to access the InsultService via Rx'ified API
-        InsultService service = new ServiceProxyBuilder(vertx.getDelegate())
-                                        .setAddress("insult.service")
-                                        .build(InsultService.class);
+            InsultService service = InsultService
+                            .newInstance(new ServiceProxyBuilder(vertx.getDelegate()).setAddress(INSULT_SERVICE_ADDRESS)
+                                            .build(com.redhat.qcon.insult.services.InsultService.class));
 
-        // Map out OpenAPI3 route to our Service Proxy implementation
-        factory.addHandlerByOperationId("getInsult",
-            ctx -> service.rxGetREST().toMaybe()
-                      .doOnError(e -> errorHandler(ctx, e))
-                      .subscribe(json -> sendResult(ctx, json)));
+            // Map out OpenAPI3 route to our Service Proxy implementation
+            factory.addHandlerByOperationId("getInsult", ctx -> service.rxGetREST()
+                            .subscribe(
+                                    json -> sendResult(ctx, json),
+                                    e -> errorHandler(ctx, e)));
 
-        BridgeOptions bOpts = new BridgeOptions()
-                .addInboundPermitted(new PermittedOptions().setAddress("insult.service"))
-                .addOutboundPermitted(new PermittedOptions().setAddress("kafka.service"))
-                .addOutboundPermitted(new PermittedOptions().setAddress("insult.service"));
+            // Map out OpenAPI3 route to our Service Proxy implementation
+            factory.addHandlerByOperationId("health", ctx -> service.rxCheck()
+                            .subscribe(
+                                    json -> sendResult(ctx, json),
+                                    e -> errorHandler(ctx, e)));
 
-        SockJSHandler sockHandler = SockJSHandler.create(vertx).bridge(bOpts);
+            Router api = factory.getRouter();
 
-        Router router = factory.getRouter();
+            Router root = Router.router(vertx);
 
-        router.route("/eventbus").handler(sockHandler);
+            CorsHandler corsHandler = CorsHandler.create(".*").allowedHeader("Access-Control-Request-Method")
+                            .allowedHeader("Access-Control-Allow-Origin")
+                            .allowedHeader("Access-Control-Allow-Headers").allowedHeader("Content-Type")
+                            .allowedMethod(HttpMethod.GET).allowedMethod(HttpMethod.POST)
+                            .allowedMethod(HttpMethod.HEAD).allowedMethod(HttpMethod.PUT)
+                            .allowedMethod(HttpMethod.OPTIONS).allowedMethod(HttpMethod.CONNECT);
 
-        return vertx.createHttpServer(httpOpts)
-                    .requestHandler(router::accept)
-                    .rxListen()
-                    .toMaybe();
+            root.route().order(0).handler(corsHandler);
+            api.route().order(0).handler(corsHandler);
+
+            root.mountSubRouter("/api/v1", api);
+
+            BridgeOptions bOpts = new BridgeOptions()
+                            .addInboundPermitted(new PermittedOptions().setAddress("insult.service"))
+                            .addOutboundPermitted(new PermittedOptions().setAddress("kafka.service"))
+                            .addOutboundPermitted(new PermittedOptions().setAddress("insult.service"))
+                            .addOutboundPermitted(new PermittedOptions().setAddress(FAVORITES_EB_ADDRESS));
+
+            SockJSHandler sockHandler = SockJSHandler.create(vertx).bridge(bOpts);
+
+            root.route("/eventbus/*").handler(sockHandler);
+
+            return vertx.createHttpServer(httpOpts).requestHandler(root::accept).rxListen().toMaybe();
     }
 ----
 
 Pay special attention to the `BridgeOptions` object. This is how to tell Vert.x which
 addresses can communicate over the websocket bridge. Unless explicitly allowed,
-sending messages to other event bus addresses is prohibited.
+sending/receiving messages to/from other event bus addresses is prohibited.
 
-Another thing to mind is that we are calling a `errorHandler` and a `sendResult` method
+Another thing to mind is that we are calling an `errorHandler` and a `sendResult` method
 which have not yet been defined. These methods, defined below, allow us to separate out
 the functionality in a way that is easier to read and easier to test.
 
 .src/main/java/com/redhat/qcon/insult/MainVerticle.java
 [source,java,subs=attributes+]
 ----
-
     /**
      * Send a successful HTTP response
-     * @param ctx The {@link RoutingContext} of the request
+     *
+     * @param ctx  The {@link RoutingContext} of the request
      * @param json The {@link JsonObject} body to be sent in the response
      */
     private void sendResult(RoutingContext ctx, JsonObject json) {
-        ctx.response()
-            .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON.getMimeType())
-            .setStatusCode(OK.code())
-            .setStatusMessage(OK.reasonPhrase())
-            .end(json.encodePrettily());
+            ctx.response().putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON.getMimeType())
+                            .setStatusCode(OK.code()).setStatusMessage(OK.reasonPhrase())
+                            .end(json.encodePrettily());
     }
 
     /**
      * Send an unsuccessful HTTP response
+     *
      * @param ctx The {@link RoutingContext} of the request
-     * @param e The error which caused the failure
+     * @param e   The error which caused the failure
      */
     private void errorHandler(RoutingContext ctx, Throwable e) {
-        ctx.response()
-          .setStatusCode(INTERNAL_SERVER_ERROR.code())
-          .setStatusMessage(INTERNAL_SERVER_ERROR.reasonPhrase())
-          .end(e.getLocalizedMessage());
+            ctx.response().setStatusCode(INTERNAL_SERVER_ERROR.code())
+                            .setStatusMessage(INTERNAL_SERVER_ERROR.reasonPhrase()).end(e.getLocalizedMessage());
     }
 ----
 
@@ -2143,14 +2024,14 @@ in sequence during the start of the application.
 .src/main/java/com/redhat/qcon/insult/MainVerticle.java
 [source,java,subs=attributes+]
 ----
-
     @Override
     public void start(Future<Void> startFuture) {
         initConfigRetriever()
-                .flatMap(this::provisionRouter)
-                .flatMap(this::provisionHttpServer)
-                .doOnError(startFuture::fail)
-                .subscribe(c -> startFuture.complete());
+            .flatMap(this::provisionRouter)
+            .flatMap(this::provisionHttpServer)
+            .subscribe(
+                    server -> startFuture.complete(),
+                    startFuture::fail);
     }
 ----
 
@@ -2181,7 +2062,7 @@ Since we have already defined a `/health` endpoint in our OpenAPI specification,
 need to write the service proxy implementation and wire it to our existing Router. Let's
 add the `check` method to our Service Proxy interface:
 
-.src/main/java/com/redhat/qcon/insult/services/insult/InsultService.java
+.src/main/java/com/redhat/qcon/insult/services/InsultService.java
 [source,java,subs=attributes+]
 ----
     /**
@@ -2192,6 +2073,74 @@ add the `check` method to our Service Proxy interface:
 ----
 
 And write a test to ensure that it is working as expected.
+
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImplSpec.groovy
+[source, groovy, subs=attributes+]
+----
+@Unroll
+def "Test health check endpoint: #description"() {
+    setup: 'Create Mocks for circuit breakers'
+        def adjBreaker = Mock(CircuitBreaker) {
+            1 * state() >> adjective
+        }
+        def nounBreaker = Mock(CircuitBreaker) {
+            1 * state() >> noun
+        }
+
+    and: 'Create an instance of the service under test'
+        def underTest = new InsultServiceImpl(vertx, httpClientConfig)
+
+    and: 'Replace the circuit breakers with Mocks'
+        underTest.adjBreaker = adjBreaker
+        underTest.nounBreaker = nounBreaker
+
+    and: 'An instance of AsyncConditions'
+        def conds = new AsyncConditions(1)
+
+    expect: 'We call the health check method'
+        underTest.check({ res ->
+            conds.evaluate {
+                assert res.succeeded() == status
+                assert res.result().getString("noun") == noun
+                assert res.result().getString("adj") == adjective
+            }
+        })
+
+    where: 'The following data table is used.'
+        description            | status     | noun      | adjective
+        'Both breakers closed' | true       | CLOSED    | CLOSED
+        'Adj breaker open'     | false      | CLOSED    | OPEN
+        'Noun breaker open'    | false      | OPEN      | CLOSED
+        'Both breakers open'   | false      | OPEN      | OPEN
+}
+----
+
+And the actual implementation code:
+
+.src/main/java/com/redhat/qcon/insult/services/InsultServiceImpl.java
+[source, java, subs=attributes+]
+----
+/**
+ * Check the health of this service
+ * @param healthCheckHandler A {@link Handler} callback for the results
+ */
+@Override
+public void check(Handler<AsyncResult<JsonObject>> healthCheckHandler) {
+    JsonObject status = new JsonObject();
+
+    String nounState = nounBreaker.state().name();
+    String adjState = adjBreaker.state().name();
+    status.put("noun", nounState)
+            .put("adj", adjState);
+
+    if (nounState.contentEquals("OPEN") || adjState.contentEquals("OPEN")) {
+        status.put("status", "OK");
+    } else {
+        status.put("status", "DEGRADED");
+    }
+    healthCheckHandler.handle(Future.succeededFuture(status));
+}
+----
 
 <<<
 == Quality Analysis And Project Health Using SonarQube
@@ -2209,7 +2158,7 @@ Jenkinsfile to tell it to analyze the code with SonarQube.
 .insult-service/Jenkinsfile
 [source,groovy,subs=attributes+]
 ----
-    ... SNIP ..
+    ... SNIP ...
     stage('Test') {
       steps {
         sh 'mvn test'
@@ -2317,3 +2266,93 @@ libraries.
 
 [glossary]
 == Glossary
+
+[appendix]
+== Appendix
+
+=== Create A New Vert.x Project Using The Vert.x Maven Plugin
+
+[IMPORTANT]
+====
+When using the skeleton project, these steps are not required
+====
+
+. Create an `insult-service` directory under the `rhoar-kubernetes-qcon-2018` top-level directory
+. Run the following command
+.. Executing Reactiverse Vert.x Plugin To Start A New Project
+[source,bash]
+----
+$ mvn io.reactiverse:vertx-maven-plugin:1.0.15:setup -DvertxVersion=3.5.1
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Maven Stub Project (No POM) 1
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- vertx-maven-plugin:1.0.15:setup (default-cli) @ standalone-pom ---
+[INFO] No pom.xml found, creating it in /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service
+Set the project groupId [io.vertx.example]: com.redhat.qcon
+Set the project artifactId [my-vertx-project]: insult-service
+Set the project version [1.0-SNAPSHOT]: 1.0.0-SNAPSHOT
+Set the vertcile class name [MainVerticle]:
+[INFO] Creating verticle MainVerticle
+[INFO] Creating directory /home/dphillips/Documents/RedHat/Workspace/rhoar-kubernetes-qcon-2018/insult-service/src/main/java/com/redhat/qcon
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 34.510 s
+[INFO] Finished at: 2018-05-21T12:07:46-04:00
+[INFO] Final Memory: 9M/166M
+[INFO] ------------------------------------------------------------------------
+----
+
+This will create a new Maven POM file populated based on the values you entered during the setup.
+
+After the POM file has been created, we will need to add some additional libraries for this microservice:
+
+* vertx-web-api-contract
+* vertx-rx-java2
+* vertx-service-proxy
+* vertx-sockjs-service-proxy
+* vertx-config-kubernetes-configmap
+* vertx-codegen
+* vertx-lang-js
+
+All of these are within the `io.vertx` Maven group ID and covered via the dependency management setup
+from the initialization process, so we can put them in without versions as follows:
+
+.POM Excerpt Showing Provided and Processor Dependencies
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-web-api-contract</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-rx-java2</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-service-proxy</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-sockjs-service-proxy</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-config-kubernetes-configmap</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-codegen</artifactId>
+    <scope>provided</scope>
+    <classifier>processor</classifier>
+</dependency>
+<dependency>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-lang-js</artifactId>
+    <scope>provided</scope>
+</dependency>
+----

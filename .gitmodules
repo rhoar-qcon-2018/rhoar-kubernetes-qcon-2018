@@ -2,8 +2,8 @@
 	path = ui-service
 	url = https://github.com/rhoar-qcon-2018/ui-service.git
 [submodule "lab-infrastructure-as-code"]
-	path = lab-infrastructure-as-code
-	url = https://github.com/rhoar-qcon-2018/lab-infrastructure-as-code.git
+	path = infrastructure-as-code
+	url = https://github.com/rhoar-qcon-2018/infrastructure-as-code.git
 [submodule "kafka-service"]
 	path = kafka-service
 	url = https://github.com/rhoar-qcon-2018/kafka-service.git

@@ -13,3 +13,6 @@
 [submodule "infrastructure-as-code"]
 	path = infrastructure-as-code
 	url = https://github.com/rhoar-qcon-2018/infrastructure-as-code.git
+[submodule "strimzi-kafka-operator"]
+	path = strimzi-kafka-operator
+	url = https://github.com/strimzi/strimzi-kafka-operator.git

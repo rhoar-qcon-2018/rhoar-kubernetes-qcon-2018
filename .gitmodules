@@ -4,9 +4,6 @@
 [submodule "kafka-service"]
 	path = kafka-service
 	url = https://github.com/rhoar-qcon-2018/kafka-service.git
-[submodule "infrastructure-as-code"]
-	path = infrastructure-as-code
-	url = https://github.com/rhoar-qcon-2018/nfrastructure-as-code.git
 [submodule "adjective-service"]
 	path = adjective-service
 	url = https://github.com/rhoar-qcon-2018/reactive-k8s-adjective-service.git

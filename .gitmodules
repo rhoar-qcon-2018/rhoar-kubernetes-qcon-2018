@@ -1,9 +1,6 @@
 [submodule "ui-service"]
 	path = ui-service
 	url = https://github.com/rhoar-qcon-2018/ui-service.git
-[submodule "infrastructure-as-code"]
-	path = infrastructure-as-code
-	url = https://github.com/rhoar-qcon-2018/infrastructure-as-code.git
 [submodule "kafka-service"]
 	path = kafka-service
 	url = https://github.com/rhoar-qcon-2018/kafka-service.git

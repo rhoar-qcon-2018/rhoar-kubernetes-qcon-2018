@@ -12,4 +12,4 @@
 	url = https://github.com/rhoar-qcon-2018/reactive-k8s-noun-service.git
 [submodule "infrastructure-as-code"]
 	path = infrastructure-as-code
-	url = ./infrastructure-as-code
+	url = ihttps://github.com/rhoar-qcon-2018/nfrastructure-as-code.git

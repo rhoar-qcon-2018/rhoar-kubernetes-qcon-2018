@@ -227,35 +227,6 @@ will all of the participants will be pasted into those channels.
 * https://gitter.im/rhoar-qcon-2018/Questions[Questions] - Ask Questions Here is we are not getting to you quickly enough
 * https://gitter.im/rhoar-qcon-2018/Feedback[Feedback] - Tell us what you liked (or didn't, S'ok we have thick skin)!
 
-== Conference WiFi SUCKS!
-Those of you who have been to many conferences are aware that conference wifi is terrible, slow, and overtaxed. To help prevent the slow conference wifi from slowing us down too much, we'll be using a local Nexus server for Maven artifacts. This will allow everyone to get cached versions of the required artifacts for local development without overstraining the hotel's WiFi.
-
-* SSID: rhoar-qcon-2018
-* KEY: ILikeReactiveJava
-
-[IMPORTANT]
-====
-This wifi provided for this talk is NOT very secure. Please do not expect to have reliable security on this network!
-====
-
-.Connect To The `rhoar-qcon-2018` wifi
-.In your home directory, ensure that the directory `.m2` exists
-.In the `<HOME>/.m2` directory, create a file `settings.xml`
-
-.settings.xml
-[source, xml]
-----
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
-  <mirrors>
-    <mirror> <!--Send all requests to the public group -->
-      <id>nexus</id>
-      <mirrorOf>*</mirrorOf>
-      <url>http://192.168.10.5.nip.io/repository/maven-public/</url>
-    </mirror>
-  </mirrors>
-</settings>
-----
-
 <<<
 == Exercise 1: Load A Complete DevOps Environment In Kubernetes
 
@@ -265,6 +236,18 @@ While some of the process we will show here is specific to OpenShift, all of the
 be achieved using https://github.com/kubernetes/helm[Helm] in stock Kubernetes (Without the nice UI)
 https://blog.openshift.com/from-templates-to-openshift-helm-charts/[From OpenShift Templates To Helm Charts]
 ====
+
+=== Prerequisistes
+. A functional BASH shell
+.. On Windows, this CAN be Windows Subsystem for Linux (WFL)
+. Ansible >= 2.5
+.. On *nix systems, this can be installed via Python PIP
+.. On Windows systems, a working Docker installation can be used
+
+==== Additional Dependencies When Running Locally With MiniShift
+. VirtualBox
+. >= 16GB RAM
+. >= Quad-core/Hyperthreaded CPU
 
 === Download/Install OpenShift Client Tools
 You can always download the latest OpenShift CLI tools from Github https://github.com/openshift/origin/releases[HERE]
@@ -286,43 +269,25 @@ To simplify the process of getting all of the projects, we have created a Git pr
 git clone https://github.com/rhoar-qcon-2018/rhoar-kubernetes-qcon-2018.git --recurse-submodules
 ----
 
-.Set Cluster Username
-[source, bash]
-----
-export USERNAME='user<NUM>'
-----
-
-=== Execute the inventory
+=== Execute Inventory On Remote OpenShift Cluster
 
 [source, bash]
 ----
+export OPENSHIFT_USERNAME='<OpenShift Username>'
+export OPENSHIFT_PASSWORD='<OpenShift Password>'
 $ ./run-remote.sh
 ----
 
-=== Final Configurations
+=== Execute Inventory On Local MiniShift Instance
 
-. Log in to the Web Console for the cluster https://master.qcon.openshift.opentlc.com/[HERE]
-. Open your DevOps Environment labeled as `labs-ci-cd<USERNAME>`
-. Click on the link for *SonarQube* to open it in a new tab/window
-. Log in with `admin/admin`
-. Generate a new token when prompted and copy it to your clipboard
-. Return to the OpenShift Console, click the link for Jenkins
-. Log in with your OpenShift Username/Password
-. Click on **Manage Jenkins** and then click on **Configure System**
-. Locate section labeled **SonarQube servers** and if there is not already a configured server, add one as shown below:
-+
-===
-Name: sonar
+In order to run minishift locally, you will need a Red Hat Developers account. You can get one by going https://developers.redhat.com/[HERE].
 
-Server URL: http://sonarqube:9000
-
-Server version: 5.3. or higher
-
-Server authentication token: <PASTE TOKEN HERE>
-
-SonarQube account login: <BLANK>
-
-SonarQube account password: <BLANK>
+[source, bash]
+----
+$ export RED_HAT_DEVELOPERS_USERNAME=<Your RHD Username>
+$ export RED_HAT_DEVELOPERS_PASSWORD=<Your RHD Password>
+$ ./run-locally.sh
+----
 
 <<<
 == Load Applications Into CI/CD Environment

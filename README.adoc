@@ -237,7 +237,7 @@ be achieved using https://github.com/kubernetes/helm[Helm] in stock Kubernetes (
 https://blog.openshift.com/from-templates-to-openshift-helm-charts/[From OpenShift Templates To Helm Charts]
 ====
 
-=== Prerequisistes
+=== Prerequisites
 . A functional BASH shell
 .. On Windows, this CAN be Windows Subsystem for Linux (WFL)
 . Ansible >= 2.5
@@ -273,9 +273,10 @@ git clone https://github.com/rhoar-qcon-2018/rhoar-kubernetes-qcon-2018.git --re
 
 [source, bash]
 ----
+cd infrastructure-as-code
 export OPENSHIFT_USERNAME='<OpenShift Username>'
 export OPENSHIFT_PASSWORD='<OpenShift Password>'
-$ ./run-remote.sh
+./run-remote.sh
 ----
 
 === Execute Inventory On Local MiniShift Instance
@@ -284,14 +285,11 @@ In order to run minishift locally, you will need a Red Hat Developers account. Y
 
 [source, bash]
 ----
-$ export RED_HAT_DEVELOPERS_USERNAME=<Your RHD Username>
-$ export RED_HAT_DEVELOPERS_PASSWORD=<Your RHD Password>
-$ ./run-locally.sh
+cd infrastructure-as-code
+export RED_HAT_DEVELOPERS_USERNAME=<Your RHD Username>
+export RED_HAT_DEVELOPERS_PASSWORD=<Your RHD Password>
+./run-locally.sh
 ----
-
-<<<
-== Load Applications Into CI/CD Environment
-
 
 <<<
 == Exercise 2: Creating A New Vert.x Project
@@ -299,13 +297,13 @@ $ ./run-locally.sh
 
 === Download Our Skeleton Project
 
-. Got to https://github.com/rhoar-qcon-2018/insult-service and *FORK* that project
+. Go to https://github.com/rhoar-qcon-2018/insult-service and *FORK* that project
 . Clone that *FORK* of the project locally `git clone https://github.com/<YOUR USER>/insult-service.git
 
 [NOTE]
 ====
 You CAN use the Vert.x Maven Plugin to create a project from scratch. If you are interested in this, please
-refer to the Appendix TODO Vert.x Maven Plugin
+refer to the Appendix <<Create A New Vert.x Project Using The Vert.x Maven Plugin>>
 ====
 
 <<<
@@ -313,8 +311,7 @@ refer to the Appendix TODO Vert.x Maven Plugin
 
 Vert.x comes with a JUnit-compatible library for doing unit testing called `vertx-unit`. A Open Innovation Labs, we
 prefer Behavior Driven Development (BDD), so for this project we will use
-http://spockframework.org/spock/docs/1.1/index.html[SpockFramework]. In order to use Spock, we need a few dependencies
-which have already been added in the skeleton:
+http://spockframework.org/spock/docs/1.1/index.html[SpockFramework]. In order to use Spock, we need a few dependencies which have already been added in the skeleton:
 
 . Groovy - For writing/running test specifications
 . Spock Framework - For BDD
@@ -326,14 +323,11 @@ run the Spock tests. This is already configured in your POM from the skeleton pr
 
 <<<
 == Create A Jenkins Pipeline
-With the latest versions of Jenkins, the new https://jenkins.io/doc/book/pipeline/syntax/[*_declarative pipeline syntax_*]
-has become the preferred way in which to define DevOps pipelines. The skeleton project you checked out earlier has a
-very complete Jenkins pipeline which we will discuss in detail as we go along.
+With the latest versions of Jenkins, the new https://jenkins.io/doc/book/pipeline/syntax/[*_declarative pipeline syntax_*] has become the preferred way in which to define DevOps pipelines. The skeleton project you checked out earlier has a very complete Jenkins pipeline which we will discuss in detail as we go along.
 
 === Add The Pipeline To OpenShift
 Part of our Ansible automation which was run this morning created a template for pipeline builds. If you go into your
-*_CI/CD_* project and click on *_Add to project -> Select from project_* in the top right corner of the
-OpenShift web console.
+*_CI/CD_* project and click on *_Add to project -> Select from project_* in the top right corner of the OpenShift web console.
 
 .Add To Project
 [#image-add-to-project]
